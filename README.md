@@ -44,8 +44,22 @@ Do not create another public `awesome-technocore` list. During the shadow period
 
 1. Create the approved pseudonymous GitHub organization and X identity.
 2. Put their public names in `config/targets.toml`.
-3. Keep GitHub organization membership private if the platform permits it.
-4. Wait until `tca status` reports `shadow_complete: true`.
+3. Authenticate the pseudonymous GitHub user with an isolated `GH_CONFIG_DIR`; never switch the
+   default `gh` session used by your personal account.
+4. Log the pseudonymous X account into a separate Chrome profile and put that profile name in
+   `x_chrome_profile`.
+5. Keep GitHub organization membership private if the platform permits it.
+6. Wait until `tca status` reports `shadow_complete: true`.
+
+Example isolated GitHub authentication after the account exists:
+
+```bash
+GH_CONFIG_DIR="$HOME/.config/gh-agentproof" gh auth login --hostname github.com --git-protocol ssh --web
+GH_CONFIG_DIR="$HOME/.config/gh-agentproof" gh auth status
+```
+
+The publisher always supplies this isolated configuration directory to `gh` and the configured
+dedicated Chrome profile to `bird`. It will not fall back to the machine's personal sessions.
 
 Then create exactly one DID:
 

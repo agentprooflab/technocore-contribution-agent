@@ -149,6 +149,8 @@ def main(argv: list[str] | None = None) -> None:
                     "identity_initialized": identity.exists(),
                     "github_binding_configured": bool(config.identity.github_account),
                     "x_binding_configured": bool(config.identity.x_account),
+                    "isolated_github_cli_configured": bool(config.identity.github_cli_config_dir),
+                    "isolated_x_profile_configured": bool(config.identity.x_chrome_profile),
                     "last_observe_at": state.get_meta("last_observe_at"),
                     "counts": state.counts(),
                 }

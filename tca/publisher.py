@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -25,8 +26,11 @@ def _file_hash(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _run(command: list[str]) -> str:
-    result = subprocess.run(command, capture_output=True, text=True, check=True)
+def _run(command: list[str], env: dict[str, str] | None = None) -> str:
+    process_env = os.environ.copy()
+    if env:
+        process_env.update(env)
+    result = subprocess.run(command, capture_output=True, text=True, check=True, env=process_env)
     return result.stdout.strip()
 
 
@@ -36,7 +40,13 @@ def _action_key(action: dict[str, Any]) -> str:
     ).hexdigest()
 
 
-def _github_pr(action: dict[str, Any]) -> str:
+def _github_env(config: Config) -> dict[str, str]:
+    return {
+        "GH_CONFIG_DIR": str(Path(config.identity.github_cli_config_dir).expanduser().resolve())
+    }
+
+
+def _github_pr(config: Config, action: dict[str, Any]) -> str:
     if not shutil.which("gh"):
         raise RuntimeError("gh CLI is unavailable")
     existing = json.loads(
@@ -53,7 +63,8 @@ def _github_pr(action: dict[str, Any]) -> str:
                 "all",
                 "--json",
                 "url,state",
-            ]
+            ],
+            env=_github_env(config),
         )
         or "[]"
     )
@@ -74,7 +85,8 @@ def _github_pr(action: dict[str, Any]) -> str:
             action["title"],
             "--body-file",
             action["body_file"],
-        ]
+        ],
+        env=_github_env(config),
     )
     match = re.search(r"https://github\.com/\S+/pull/\d+", output)
     if not match:
@@ -137,11 +149,21 @@ def _technocore_message(
     return receipt
 
 
-def _x_post(action: dict[str, Any]) -> str:
+def _x_post(config: Config, action: dict[str, Any]) -> str:
     if not shutil.which("bird"):
         raise RuntimeError("bird CLI is unavailable")
     require_safe_outbound(action["text"])
-    output = _run(["bird", "--cookie-source", "chrome", "tweet", action["text"]])
+    output = _run(
+        [
+            "bird",
+            "--cookie-source",
+            "chrome",
+            "--chrome-profile",
+            config.identity.x_chrome_profile,
+            "tweet",
+            action["text"],
+        ]
+    )
     match = re.search(r"https://x\.com/\S+/status/\d+", output)
     if not match:
         raise RuntimeError(f"could not parse X post URL: {output}")
@@ -179,7 +201,8 @@ def _enforce_publication_budget(config: Config, state: State, bundle: dict[str, 
                     "open",
                     "--json",
                     "headRefName,url",
-                ]
+                ],
+                env=_github_env(config),
             )
             or "[]"
         )
@@ -207,6 +230,8 @@ def publish_bundle(
         raise RuntimeError(
             "configure the approved pseudonymous GitHub and X account bindings first"
         )
+    if not config.identity.github_cli_config_dir or not config.identity.x_chrome_profile:
+        raise RuntimeError("configure isolated GitHub CLI and Chrome profile credentials first")
     bundle_row = state.bundle(bundle_id)
     bundle_path = Path(bundle_row["path"])
     actual_hash = _file_hash(bundle_path)
@@ -231,7 +256,7 @@ def publish_bundle(
         state.set_action(bundle_id, action_type, key, "running")
         try:
             if action_type == "github_pr":
-                url = _github_pr(action)
+                url = _github_pr(config, action)
                 result: dict[str, Any] = {"url": url}
             elif action_type == "technocore":
                 receipt = _technocore_message(config, state, identity, action)
@@ -241,7 +266,7 @@ def publish_bundle(
                 )
                 result = {"url": url, "receipt": receipt}
             elif action_type == "x":
-                url = _x_post(action)
+                url = _x_post(config, action)
                 result = {"url": url}
             else:
                 raise RuntimeError(f"unsupported action type: {action_type}")

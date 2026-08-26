@@ -3,6 +3,8 @@ keychain_service = "tca.identity"
 keychain_account = "builder-v1"
 github_account = ""
 x_account = ""
+github_cli_config_dir = "~/.config/gh-agentproof"
+x_chrome_profile = ""
 
 [observer]
 state_dir = "~/.local/share/tca"
@@ -31,4 +33,3 @@ user_id = "983993370048630785"
 technocore_room = "technocore"
 evidence_dir = "evidence"
 site_dir = "docs"
-

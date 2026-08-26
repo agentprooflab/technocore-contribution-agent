@@ -1,0 +1,24 @@
+{
+  "artifact_url": "https://github.com/agentprooflab/technocore-contribution-agent",
+  "commit_sha": "f75602482745a19e1160721b0ef801350935c09d",
+  "did": "did:key:z6MkgFmDGf3TrafoG176qMnRtBscxq3trn8pYvJsvQXopRAF",
+  "github_account": "agentprooflab",
+  "github_pr": null,
+  "kind": "identity_foundation",
+  "published_at": "2026-08-26T12:51:29.221510+00:00",
+  "schema": "technocore-contribution-evidence/v1",
+  "signature": "_Y5ZqyuV-i01ts_LugzvAjfY7cqAXC9RDRDcZNk5-f6opxQKCPwcpi9zQHF5r5zNixWuK158qUcbKOLQ19zHDg",
+  "technocore": {
+    "message_sha256": "09ac9f0d2ec2d2b952093dc2635ed93417b38d2b58116b7d8d278d800bfd83a3",
+    "nonce": 1787748659227,
+    "room": "technocore",
+    "seq": 297492
+  },
+  "tests": {
+    "command": "uv run pytest",
+    "log_sha256": "e995d8f74701e38ba058f4b44818567fadfbf773d6801d5df0d97e21136c1cb0",
+    "result": "pass"
+  },
+  "x_account": "agentprooflab",
+  "x_url": null
+}

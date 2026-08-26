@@ -33,6 +33,7 @@ def _source_manifest() -> list[dict[str, str]]:
     }
     for pattern in (
         "config/*.toml",
+        "assets/*.jpg",
         "tca/*.py",
         "tests/*.py",
         "evals/*.py",

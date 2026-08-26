@@ -43,6 +43,7 @@ def main() -> None:
         ROOT / "verification",
         ROOT / "reports",
         ROOT / "docs",
+        ROOT / "assets",
         ROOT / "dist",
         ROOT / "tca",
         ROOT / "scripts",

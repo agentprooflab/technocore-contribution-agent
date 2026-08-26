@@ -9,33 +9,37 @@ from tca.context import budget_units
 from tca.evidence import load_record, verify_record
 
 SITE_CSS = """
-:root{color-scheme:dark;--ink:#f7f8ff;--muted:#98a1bd;--line:#27304d;--panel:#11172a;--cyan:#64e7ff;--violet:#9b8cff;--green:#73f7b2;--amber:#ffcf6d;--red:#ff7f91}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#080b16;color:var(--ink);font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 18% -10%,#4d48d944,transparent 35%),radial-gradient(circle at 85% 12%,#08b9d52b,transparent 30%);z-index:-1}
-a{color:inherit}.shell{width:min(1180px,calc(100% - 32px));margin:auto}.topbar{display:flex;justify-content:space-between;align-items:center;padding:24px 0}.brand{font-weight:760;letter-spacing:-.02em}.brand span{color:var(--cyan)}
-.badge{display:inline-flex;align-items:center;gap:8px;border:1px solid #315c68;background:#0b2831;color:#a8f4ff;border-radius:999px;padding:7px 11px;font-size:12px}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 14px var(--green)}
-.hero{padding:76px 0 54px;display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:end}.eyebrow{color:var(--cyan);font-size:12px;font-weight:750;letter-spacing:.16em;text-transform:uppercase}.hero h1{font-size:clamp(44px,7vw,84px);line-height:.96;letter-spacing:-.065em;margin:14px 0 24px;max-width:850px}.lede{font-size:20px;color:#c6cce0;max-width:720px}.hero-note{border-left:1px solid var(--line);padding-left:30px;color:var(--muted)}
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0 72px}.metric,.panel{background:linear-gradient(145deg,#151b31d9,#0d1223e8);border:1px solid var(--line);box-shadow:0 22px 70px #0004}.metric{padding:22px;border-radius:18px}.metric strong{display:block;font-size:30px;letter-spacing:-.04em}.metric span{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
-.section{padding:38px 0 54px}.section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:22px}.section h2{font-size:30px;letter-spacing:-.04em;margin:0}.section-head p{color:var(--muted);max-width:570px;margin:0}.panel{border-radius:22px;padding:24px}.brief-grid{display:grid;grid-template-columns:.72fr 1.28fr;gap:16px}
-.controls label{display:block;color:var(--muted);font-size:12px;margin-bottom:10px}.controls input{width:100%;accent-color:var(--cyan)}.controls output{display:block;margin-top:12px}.curve-point{display:none}.budget-number{font-size:44px;font-weight:760;letter-spacing:-.06em}.subtle{color:var(--muted)}.item-list{display:grid;gap:12px}.attention{padding:17px 18px;border:1px solid #2c3553;border-radius:15px;background:#0c1121}.attention[hidden]{display:none}.attention-top{display:flex;justify-content:space-between;gap:12px}.priority{font:700 12px ui-monospace,monospace;color:var(--cyan)}.attention p{margin:10px 0;color:#d5daea;overflow-wrap:anywhere}.chips{display:flex;gap:6px;flex-wrap:wrap}.chip{font-size:11px;border:1px solid #35405f;border-radius:999px;padding:4px 8px;color:#afb8d2}
-.coverage-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.coverage{padding:18px;border:1px solid var(--line);border-radius:15px;background:#0c1121}.coverage strong{display:block;margin-bottom:4px}.coverage .partial{color:var(--amber)}.coverage .complete_for_observed_window{color:var(--green)}.coverage .epoch_ambiguous{color:var(--red)}
-.pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.stage{border:1px solid var(--line);border-radius:14px;padding:16px;background:#0c1121}.stage b{display:block;color:var(--violet);margin-bottom:6px}.install{display:grid;grid-template-columns:1fr 1fr;gap:16px}.code{background:#050711;border:1px solid #262e48;border-radius:14px;padding:18px;overflow:auto;color:#bff5ff;font:13px/1.6 ui-monospace,SFMono-Regular,monospace}
-.evidence-table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}.evidence-table th,.evidence-table td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.evidence-table th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.valid{color:var(--green)}.failed{color:var(--red)}.proof{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.proof article{padding:18px;border:1px solid var(--line);border-radius:15px}.proof b{color:var(--green)}
-footer{padding:50px 0 70px;color:var(--muted);display:flex;justify-content:space-between;border-top:1px solid var(--line)}
-@media(max-width:850px){.hero,.brief-grid,.install{grid-template-columns:1fr}.hero{padding-top:40px}.hero-note{border-left:0;padding-left:0}.metrics,.coverage-grid,.proof{grid-template-columns:1fr 1fr}.pipeline{grid-template-columns:1fr}}
-@media(max-width:560px){.metrics,.coverage-grid,.proof{grid-template-columns:1fr}.hero h1{font-size:46px}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+:root{color-scheme:dark;--black:#080907;--ink:#f2f0e7;--paper:#d9d6c8;--acid:#d7ff00;--orange:#ff5a1f;--dim:#8d9084;--line:#3b3d36;--line-hot:#707368;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--sans:Arial,Helvetica,sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--black)}body{margin:0;background:var(--black);color:var(--ink);font:15px/1.45 var(--sans);overflow-x:hidden}body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:20;opacity:.09;background:repeating-linear-gradient(0deg,transparent 0 3px,#fff 4px);mix-blend-mode:overlay}a{color:inherit;text-decoration:none}.shell{width:min(1320px,calc(100% - 40px));margin:auto}.mono{font-family:var(--mono)}
+.ticker{overflow:hidden;border-block:1px solid var(--line);background:var(--acid);color:var(--black);font:700 11px/30px var(--mono);letter-spacing:.12em;white-space:nowrap}.ticker-track{display:inline-flex;min-width:max-content;animation:ticker 24s linear infinite}.ticker-track span{padding-right:42px}.topbar{height:74px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{font:800 18px var(--mono);letter-spacing:-.04em}.brand b{color:var(--acid)}.top-meta{display:flex;gap:24px;color:var(--dim);font:700 10px var(--mono);letter-spacing:.1em}.top-meta strong{color:var(--ink)}
+.hero{position:relative;min-height:680px;border-bottom:1px solid var(--line);display:flex;align-items:flex-end;overflow:hidden}.hero-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.78;filter:contrast(1.08) saturate(.92);animation:hero-drift 18s ease-in-out infinite alternate}.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#080907 0%,#080907eb 36%,#0809072b 72%,#080907 100%)}.hero-scan{position:absolute;z-index:2;inset:-30% 0 auto;height:25%;background:linear-gradient(180deg,transparent,#d7ff001f,transparent);animation:scan 7s linear infinite}.hero-copy{position:relative;z-index:3;width:min(900px,90%);padding:70px 0 76px}.kicker,.section-id{font:800 11px var(--mono);letter-spacing:.16em;color:var(--acid);text-transform:uppercase}.hero h1{font-size:clamp(58px,10vw,142px);line-height:.78;letter-spacing:-.085em;margin:18px 0 30px;text-transform:uppercase}.hero h1 em{font-style:normal;color:var(--acid)}.lede{max-width:650px;font-size:clamp(18px,2.2vw,28px);line-height:1.2;margin:0;color:var(--paper)}.hero-actions{display:flex;gap:10px;margin-top:34px;flex-wrap:wrap}.button{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border:1px solid var(--ink);font:800 11px var(--mono);letter-spacing:.08em;text-transform:uppercase}.button.primary{background:var(--acid);border-color:var(--acid);color:var(--black)}.button:hover{background:var(--ink);color:var(--black)}.hero-stamp{position:absolute;z-index:4;right:3%;bottom:46px;width:150px;height:150px;border:1px solid var(--acid);border-radius:50%;display:grid;place-items:center;text-align:center;color:var(--acid);font:800 11px/1.35 var(--mono);letter-spacing:.12em;transform:rotate(10deg);animation:stamp 12s linear infinite}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}.metric{padding:28px 22px 30px;border-right:1px solid var(--line);min-height:160px}.metric:last-child{border-right:0}.metric strong{display:block;font:800 clamp(38px,5vw,72px)/.9 var(--mono);letter-spacing:-.08em}.metric strong.acid{color:var(--acid)}.metric span{display:block;margin-top:18px;color:var(--dim);font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase}.metric small{display:block;color:var(--paper);margin-top:6px}
+.section{padding:96px 0;border-bottom:1px solid var(--line)}.section-head{display:grid;grid-template-columns:130px 1fr minmax(260px,440px);gap:24px;align-items:start;margin-bottom:46px}.section h2{font-size:clamp(38px,6vw,82px);line-height:.88;letter-spacing:-.065em;text-transform:uppercase;margin:0}.section-head p{color:var(--paper);font-size:17px;margin:0}.section-id{color:var(--orange)}
+.thesis{display:grid;grid-template-columns:1.25fr .75fr;border:1px solid var(--line)}.thesis-main{padding:42px;border-right:1px solid var(--line)}.thesis-main p{font-size:clamp(26px,4vw,58px);line-height:1.02;letter-spacing:-.045em;margin:0}.thesis-main mark{background:var(--acid);color:var(--black);padding:0 .08em}.thesis-side{display:grid}.thesis-step{padding:24px;border-bottom:1px solid var(--line)}.thesis-step:last-child{border-bottom:0}.thesis-step b{display:block;color:var(--acid);font:800 12px var(--mono);margin-bottom:8px}.thesis-step p{margin:0;color:var(--paper)}.not-oracle{margin-top:14px;padding:14px 18px;border:1px solid var(--orange);color:var(--orange);font:800 11px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.brief-grid{display:grid;grid-template-columns:360px 1fr;border:1px solid var(--line)}.controls{background:var(--acid);color:var(--black);padding:30px;min-height:470px}.controls label{display:block;font:800 11px var(--mono);letter-spacing:.12em;text-transform:uppercase}.budget-number{font:900 clamp(72px,8vw,116px)/.82 var(--mono);letter-spacing:-.1em;margin:26px 0 8px}.budget-unit{font:800 11px var(--mono);letter-spacing:.12em}.controls input{width:100%;margin:54px 0 22px;accent-color:var(--black)}.controls output{display:block;border-top:1px solid #08090755;padding-top:20px;font:700 13px/1.5 var(--mono)}.controls output strong{font-size:25px}.budget-bar{height:4px;background:#08090733;margin-top:24px}.budget-bar i{display:block;width:var(--budget-progress,33.33%);height:100%;background:var(--black);transition:width .25s ease}.curve-point{display:none}.item-wrap{padding:0}.list-head{min-height:62px;display:flex;justify-content:space-between;align-items:center;padding:0 22px;border-bottom:1px solid var(--line);font:800 10px var(--mono);letter-spacing:.12em;color:var(--dim)}.item-list{display:grid}.attention{padding:22px;border-bottom:1px solid var(--line);transition:background .2s ease,opacity .2s ease}.attention:last-child{border-bottom:0}.attention:hover{background:#14160f}.attention[hidden]{display:none}.attention-top{display:flex;justify-content:space-between;gap:12px}.priority{font:900 12px var(--mono);color:var(--acid)}.source{font:800 10px var(--mono);letter-spacing:.1em;color:var(--dim);text-transform:uppercase}.attention .excerpt{font-size:20px;line-height:1.2;margin:16px 0;color:var(--ink);overflow-wrap:anywhere}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{font:700 10px var(--mono);border-left:2px solid var(--orange);padding-left:7px;color:var(--paper)}.evidence-id{display:block;margin-top:17px;color:var(--dim);font:10px/1.5 var(--mono);overflow-wrap:anywhere}.fixture-note{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;color:var(--dim);font:11px/1.5 var(--mono)}
+.coverage-grid{border-top:1px solid var(--line)}.coverage{display:grid;grid-template-columns:minmax(190px,1fr) 190px 1.3fr;gap:18px;align-items:center;padding:20px 0;border-bottom:1px solid var(--line)}.coverage strong{font:800 13px var(--mono)}.coverage-status{font:800 10px var(--mono);letter-spacing:.08em;text-transform:uppercase}.coverage-status.partial{color:#ffc14a}.coverage-status.complete_for_observed_window{color:var(--acid)}.coverage-status.epoch_ambiguous{color:var(--orange)}.coverage-data{color:var(--dim);font:11px/1.5 var(--mono)}
+.pipeline{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--line)}.stage{padding:24px 20px;min-height:170px;border-right:1px solid var(--line)}.stage:last-child{border-right:0}.stage b{display:block;color:var(--orange);font:800 11px var(--mono);margin-bottom:46px}.stage strong{display:block;font-size:18px;text-transform:uppercase}.stage p{color:var(--dim);margin:8px 0 0}.install{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}.code-block{background:var(--black);padding:24px}.code-label{color:var(--acid);font:800 10px var(--mono);letter-spacing:.1em}.code{margin:18px 0 0;overflow:auto;color:var(--paper);font:12px/1.7 var(--mono);white-space:pre-wrap}
+.proof{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line)}.proof article{padding:30px;border-right:1px solid var(--line);min-height:210px}.proof article:last-child{border-right:0}.proof b{display:block;color:var(--acid);font:900 clamp(40px,6vw,76px)/.9 var(--mono);letter-spacing:-.08em}.proof p{margin-top:26px;color:var(--paper)}.proof small{color:var(--dim);font-family:var(--mono)}
+.table-wrap{border:1px solid var(--line);overflow-x:auto}.evidence-table{width:100%;border-collapse:collapse;min-width:780px}.evidence-table th,.evidence-table td{padding:15px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-family:var(--mono)}.evidence-table th{color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.08em}.valid{color:var(--acid)}.failed{color:var(--orange)}footer{padding:36px 0 60px;color:var(--dim);display:flex;justify-content:space-between;font:11px var(--mono);letter-spacing:.06em}.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}.reveal.in{opacity:1;transform:none}
+@keyframes ticker{to{transform:translateX(-50%)}}@keyframes hero-drift{from{transform:scale(1.02) translateX(0)}to{transform:scale(1.08) translateX(-1.5%)}}@keyframes scan{to{transform:translateY(520%)}}@keyframes stamp{to{transform:rotate(370deg)}}
+@media(max-width:900px){.top-meta span:nth-child(-n+2){display:none}.hero{min-height:620px}.hero-stamp{display:none}.metrics{grid-template-columns:1fr 1fr}.metric:nth-child(2){border-right:0}.section-head{grid-template-columns:90px 1fr}.section-head p{grid-column:2}.thesis,.brief-grid{grid-template-columns:1fr}.thesis-main{border-right:0;border-bottom:1px solid var(--line)}.controls{min-height:auto}.coverage{grid-template-columns:1fr 150px}.coverage-data{grid-column:1/-1}.pipeline{grid-template-columns:1fr 1fr}.stage{border-bottom:1px solid var(--line)}.install{grid-template-columns:1fr}.proof{grid-template-columns:1fr}.proof article{border-right:0;border-bottom:1px solid var(--line)}}
+@media(max-width:560px){.shell{width:min(100% - 24px,1320px)}.topbar{height:60px}.hero{min-height:560px}.hero-copy{padding:54px 0}.hero h1{font-size:58px}.metrics{grid-template-columns:1fr}.metric{border-right:0;border-bottom:1px solid var(--line)}.section{padding:68px 0}.section-head{display:block}.section-id{display:block;margin-bottom:18px}.section-head p{margin-top:20px}.thesis-main{padding:24px}.fixture-note{grid-template-columns:1fr}.coverage{grid-template-columns:1fr}.pipeline{grid-template-columns:1fr}.stage{border-right:0}.top-meta{gap:0}.button{width:100%;justify-content:center}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.ticker-track,.hero-art,.hero-scan,.hero-stamp{animation:none}.reveal{opacity:1;transform:none;transition:none}.budget-bar i{transition:none}}
 """
 
 SITE_JS = """
 const slider=document.querySelector('#budget');const shown=document.querySelector('#shown');
 const budgetValue=document.querySelector('#budget-value');const cards=[...document.querySelectorAll('.attention')];
 const critical=document.querySelector('#critical-left');const curve=[...document.querySelectorAll('.curve-point')];
-function applyBudget(){const budget=Number(slider.value);budgetValue.textContent=budget;
+const budgetPanel=document.querySelector('.controls');
+function applyBudget(){if(!slider)return;const budget=Number(slider.value);budgetValue.textContent=budget;
 const point=curve.find(item=>Number(item.dataset.budget)===budget);const ids=new Set(point?point.dataset.ids.split(',').filter(Boolean):[]);
 let count=0;for(const card of cards){const fits=ids.has(card.dataset.evidence);card.hidden=!fits;if(fits)count+=1}
-shown.textContent=count;critical.textContent=point?point.dataset.critical:'unknown'}
+shown.textContent=count;critical.textContent=point?point.dataset.critical:'—';
+budgetPanel?.style.setProperty('--budget-progress',`${((budget-300)/1500)*100}%`)}
 if(slider){slider.addEventListener('input',applyBudget);applyBudget()}
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(!reduced&&'IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(entry.isIntersecting){entry.target.classList.add('in');observer.unobserve(entry.target)}}},{threshold:.12});for(const item of document.querySelectorAll('.reveal'))observer.observe(item)}else{for(const item of document.querySelectorAll('.reveal'))item.classList.add('in')}
 """
 
 
@@ -83,18 +87,18 @@ def _attention_cards(context: dict[str, Any]) -> str:
         )
         evidence_id = html.escape(str(item.get("evidence_id", "")))
         cards.append(
-            f'<article class="attention" data-units="{budget_units(item)}" '
+            f'<article class="attention reveal" data-units="{budget_units(item)}" '
             f'data-evidence="{evidence_id}">'
             '<div class="attention-top">'
-            f'<span class="priority">P{int(item.get("priority", 0)):03d}</span>'
-            f'<span class="subtle">{html.escape(str(item.get("source", "")))}</span>'
+            f'<span class="priority">PRIORITY / {int(item.get("priority", 0)):03d}</span>'
+            f'<span class="source">SOURCE / {html.escape(str(item.get("source", "")))}</span>'
             "</div>"
-            f"<p>{html.escape(str(item.get('excerpt', '')))}</p>"
+            f'<p class="excerpt">{html.escape(str(item.get("excerpt", "")))}</p>'
             f'<div class="chips">{reasons}</div>'
-            f'<p class="subtle">Evidence {evidence_id}</p>'
+            f'<code class="evidence-id">PROOF / {evidence_id}</code>'
             "</article>"
         )
-    return "".join(cards) or '<p class="subtle">No attention items in this snapshot.</p>'
+    return "".join(cards) or '<p class="evidence-id">NO SIGNALS IN THIS SNAPSHOT.</p>'
 
 
 def _coverage_cards(context: dict[str, Any]) -> str:
@@ -102,18 +106,18 @@ def _coverage_cards(context: dict[str, Any]) -> str:
     for item in context.get("coverage", []):
         status = str(item.get("status", "unknown"))
         cards.append(
-            '<article class="coverage">'
+            '<article class="coverage reveal">'
             f"<strong>{html.escape(str(item.get('source', '')))} · "
             f"{html.escape(str(item.get('scope', '')))}</strong>"
-            f'<span class="{html.escape(status)}">{html.escape(status.replace("_", " "))}</span>'
-            f'<p class="subtle">Observed {int(item.get("observed", 0))} · '
+            f'<span class="coverage-status {html.escape(status)}">{html.escape(status.replace("_", " "))}</span>'
+            f'<div class="coverage-data">OBSERVED {int(item.get("observed", 0))} / '
             f"Known missing {int(item.get('known_missing', 0))} · "
             f"Unknown {int(item.get('unknown_gap', 0))} · "
-            f"Pending {int(item.get('pending_fetch', 0))}</p>"
-            f'<p class="subtle">Ranges {html.escape(str(item.get("ranges", "see coverage tool")))}</p>'
+            f"Pending {int(item.get('pending_fetch', 0))}<br>"
+            f"RANGES {html.escape(str(item.get('ranges', 'see coverage tool')))}</div>"
             "</article>"
         )
-    return "".join(cards) or '<p class="subtle">Coverage begins after observation.</p>'
+    return "".join(cards) or '<p class="evidence-id">COVERAGE BEGINS AFTER OBSERVATION.</p>'
 
 
 def render_site(
@@ -152,40 +156,54 @@ def render_site(
     )
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'none'; base-uri 'none'">
-<meta name="description" content="Coverage-aware, token-budgeted Technocore room deltas for agents.">
-<title>Technocore Brief · AgentProof</title><link rel="stylesheet" href="app.css"></head><body>
-<header class="shell topbar"><div class="brand">AgentProof<span>/Brief</span></div><div class="badge"><span class="dot"></span> pre-release fixture · read only</div></header>
-<main class="shell"><section class="hero"><div><div class="eyebrow">Technocore attention compiler</div><h1>See only what changed.</h1>
-<p class="lede">A small, resumable, evidence-backed inbox for agents monitoring noisy public rooms.</p></div>
-<p class="hero-note">The broker selects evidence. The consuming agent decides what it means. Every item expands to exact stored content, and every gap stays visible.</p></section>
-<section class="metrics"><article class="metric"><strong>{len(items)}</strong><span>attention items</span></article>
-<article class="metric"><strong>{reduction / 100:.2f}%</strong><span>fixture context reduction</span></article>
-<article class="metric"><strong>{int(context.get("critical_items_remaining", 0))}</strong><span>critical omitted at 1,800</span></article>
-<article class="metric"><strong>{known_missing}</strong><span>known missing sequences</span></article></section>
-<section class="section"><div class="section-head"><div><div class="eyebrow">Interactive brief</div><h2>Spend context deliberately</h2></div>
-<p>Move the budget. Items remain atomic: the tool omits a record instead of cutting evidence into misleading fragments.</p></div>
-<div class="brief-grid"><aside class="panel controls"><label for="budget">Budget units</label><div class="budget-number" id="budget-value">800</div>
-<input id="budget" type="range" min="300" max="1800" step="50" value="800" aria-controls="attention-list">
-<output class="subtle" aria-live="polite"><span id="shown">0</span> items fit. <span id="critical-left">0</span> critical items remain. Runtime accounting uses the complete payload.</output>
-{curve_nodes}</aside>
-<div class="panel item-list" id="attention-list">{_attention_cards(context)}</div></div>
-<p class="subtle">Synthetic repetition-stress snapshot. It is not a live network census.</p>
-<p class="subtle">Suppressed: acknowledged {int(suppressed.get("acknowledged", 0))}, duplicates {int(suppressed.get("duplicates", 0))}, low relevance {int(suppressed.get("low_relevance", 0))}, quarantined {int(suppressed.get("quarantined", 0))}. Deferred by this page budget: {int(suppressed.get("over_budget", 0))}.</p></section>
-<section class="section"><div class="section-head"><div><div class="eyebrow">Coverage</div><h2>Silence is not certainty</h2></div>
-<p>Observed, pending, unknown and confirmed-lost ranges remain separate.</p></div><div class="coverage-grid">{_coverage_cards({"coverage": coverage_details})}</div></section>
-<section class="section"><div class="section-head"><div><div class="eyebrow">Pipeline</div><h2>Evidence before interpretation</h2></div></div>
-<div class="pipeline"><div class="stage"><b>01 · Observe</b>Public allowlisted sources.</div><div class="stage"><b>02 · Preserve</b>Immutable revisions.</div>
-<div class="stage"><b>03 · Select</b>Observable match reasons.</div><div class="stage"><b>04 · Budget</b>Atomic evidence packing.</div><div class="stage"><b>05 · Expand</b>Exact content on demand.</div></div></section>
-<section class="section"><div class="section-head"><div><div class="eyebrow">Install</div><h2>One local tool, three surfaces</h2></div>
-<p>No wallet, new DID or model provider is required for evidence mode.</p></div><div class="install"><pre class="code">{html.escape(install_mcp)}</pre><pre class="code">{html.escape(install_cli)}</pre></div></section>
-<section class="section"><div class="section-head"><div><div class="eyebrow">Verification</div><h2>Claims with receipts</h2></div></div>
-<div class="proof"><article><b>{recall}</b><p>Official-source positives retained across {page_count} paged {page_budget}-unit briefs.</p></article><article><b>{false_positives}</b><p>Hard-negative official false positives.</p></article>
-<article><b>{reduction / 100:.2f}%</b><p>Reduction against the nonduplicative minimal-raw-observation baseline on this fixture.</p></article></div></section>
-<section class="section"><div class="section-head"><div><div class="eyebrow">Contribution evidence</div><h2>Signed work history</h2></div></div>
-<div class="panel"><table class="evidence-table"><thead><tr><th>Record</th><th>Status</th><th>Kind</th><th>Published</th><th>Artifact</th><th>Verification</th></tr></thead>
-<tbody>{_evidence_rows(evidence_dir)}</tbody></table></div></section></main>
-<footer class="shell"><span>Technocore Brief by AgentProof</span><span>Independent · public data · no eligibility claims</span></footer>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'none'; base-uri 'none'">
+<meta name="description" content="Technocore signal without the context burn: ranked, resumable, evidence-backed updates for agents.">
+<title>Technocore Brief // Signal, not noise</title><link rel="stylesheet" href="app.css"></head><body>
+<div class="ticker" aria-label="Product status"><div class="ticker-track">
+<span>READ-ONLY // NO WALLET // NO AIRDROP CLAIM // EVERY SIGNAL LINKS TO PROOF //</span><span>READ-ONLY // NO WALLET // NO AIRDROP CLAIM // EVERY SIGNAL LINKS TO PROOF //</span>
+</div></div>
+<header class="shell topbar"><div class="brand">AGENTPROOF<b>//BRIEF</b></div><div class="top-meta"><span>BUILD <strong>0.2</strong></span><span>MODE <strong>EVIDENCE</strong></span><span>STATUS <strong>PRE-RELEASE</strong></span></div></header>
+<main class="shell">
+<section class="hero"><img class="hero-art" src="assets/signal-noise-hero-v1.jpg" alt="" role="presentation"><div class="hero-scan"></div>
+<div class="hero-copy"><div class="kicker">Technocore intelligence // built for agents</div><h1>Stop reading<br><em>everything.</em></h1>
+<p class="lede">Your agent does not need the whole firehose. It needs the next actionable fact, why it matters, and the receipt.</p>
+<div class="hero-actions"><a class="button primary" href="#brief">Run the brief ↓</a><a class="button" href="#proof">Check the receipts ↗</a></div></div>
+<div class="hero-stamp" aria-hidden="true">SIGNAL<br>OVER<br>NOISE</div></section>
+
+<section class="metrics" aria-label="Verified fixture metrics">
+<article class="metric reveal"><strong class="acid">{recall}</strong><span>Official tasks caught</span><small>Across {page_count} bounded pages</small></article>
+<article class="metric reveal"><strong>{false_positives}</strong><span>False official signals</span><small>Against mutated account envelopes</small></article>
+<article class="metric reveal"><strong>{reduction / 100:.2f}%</strong><span>Less context burned</span><small>On the pinned fixture baseline</small></article>
+<article class="metric reveal"><strong>{known_missing}</strong><span>Known missing sequences</span><small>Gaps stay visible</small></article></section>
+
+<section class="section" id="what"><div class="section-head reveal"><span class="section-id">01 / THE BET</span><h2>Read less.<br>Miss nothing critical.</h2><p>Technocore Brief converts noisy public activity into a small evidence queue an agent can resume, budget, and verify.</p></div>
+<div class="thesis reveal"><div class="thesis-main"><p>Raw chat burns context. Rigid summaries lose nuance. The brief returns <mark>ranked evidence</mark> and lets the agent expand only what matters.</p></div>
+<div class="thesis-side"><div class="thesis-step"><b>01 // WATCH</b><p>Observe allowlisted public sources and preserve exact revisions.</p></div><div class="thesis-step"><b>02 // CUT</b><p>Drop duplicates, acknowledged work, spoofed authority, and low-value chatter.</p></div><div class="thesis-step"><b>03 // PROVE</b><p>Return a stable evidence ID, coverage, and exact expansion path.</p></div></div></div>
+<div class="not-oracle reveal">Not an indexer. Not a reputation score. Not an eligibility oracle. No vibes dressed up as certainty.</div></section>
+
+<section class="section" id="brief"><div class="section-head reveal"><span class="section-id">02 / LIVE DEMO</span><h2>Turn the<br>firehose down.</h2><p>Drag the context budget. The compiler keeps each evidence record atomic: it fits cleanly or waits for the next page.</p></div>
+<div class="brief-grid reveal"><aside class="controls"><label for="budget">Context spend</label><div class="budget-number" id="budget-value">800</div><div class="budget-unit">CANONICAL UNITS</div>
+<input id="budget" type="range" min="300" max="1800" step="50" value="800" aria-controls="attention-list"><div class="budget-bar"><i></i></div>
+<output aria-live="polite"><strong id="shown">0</strong> SIGNALS FIT<br><strong id="critical-left">0</strong> CRITICAL SIGNALS WAIT</output>{curve_nodes}</aside>
+<div class="item-wrap"><div class="list-head"><span>COMPILED BRIEF / SYNTHETIC FIXTURE</span><span>{len(items)} SIGNALS @ 1,800</span></div><div class="item-list" id="attention-list">{_attention_cards(context)}</div></div></div>
+<div class="fixture-note"><span>SYNTHETIC REPETITION-STRESS SNAPSHOT // NOT A LIVE NETWORK CENSUS</span><span>SUPPRESSED / ACK {int(suppressed.get("acknowledged", 0))} · DUPES {int(suppressed.get("duplicates", 0))} · LOW {int(suppressed.get("low_relevance", 0))} · QUARANTINED {int(suppressed.get("quarantined", 0))} · DEFERRED {int(suppressed.get("over_budget", 0))}</span></div></section>
+
+<section class="section"><div class="section-head reveal"><span class="section-id">03 / COVERAGE</span><h2>Silence can<br>wreck a thesis.</h2><p>An empty result means nothing without collection coverage. Observed, pending, unknown, and confirmed-lost ranges stay separate.</p></div>
+<div class="coverage-grid">{_coverage_cards({"coverage": coverage_details})}</div></section>
+
+<section class="section"><div class="section-head reveal"><span class="section-id">04 / MECHANICS</span><h2>Evidence<br>before vibes.</h2><p>Five deterministic steps. Interpretation stays with the consuming agent.</p></div>
+<div class="pipeline reveal"><div class="stage"><b>01</b><strong>Observe</strong><p>Allowlisted public sources.</p></div><div class="stage"><b>02</b><strong>Preserve</strong><p>Immutable material revisions.</p></div><div class="stage"><b>03</b><strong>Select</strong><p>Observable match reasons.</p></div><div class="stage"><b>04</b><strong>Budget</strong><p>Atomic evidence packing.</p></div><div class="stage"><b>05</b><strong>Expand</strong><p>Exact content on demand.</p></div></div></section>
+
+<section class="section"><div class="section-head reveal"><span class="section-id">05 / RUN IT</span><h2>Plug in.<br>Keep your keys.</h2><p>No wallet, fresh DID, or model provider is required for evidence mode. The MCP surface is read-only.</p></div>
+<div class="install reveal"><div class="code-block"><div class="code-label">AGENT / MCP</div><pre class="code">{html.escape(install_mcp)}</pre></div><div class="code-block"><div class="code-label">OPERATOR / CLI</div><pre class="code">{html.escape(install_cli)}</pre></div></div></section>
+
+<section class="section" id="proof"><div class="section-head reveal"><span class="section-id">06 / RECEIPTS</span><h2>Claims, with<br>the maths attached.</h2><p>Every number below is scoped to the digest-pinned synthetic corpus. No population-wide reliability or reward claim.</p></div>
+<div class="proof reveal"><article><b>{recall}</b><p>Official-source positives retained.</p><small>{page_count} pages × {page_budget} units</small></article><article><b>{false_positives}</b><p>Hard-negative official false positives.</p><small>Identity requires account ID + handle</small></article><article><b>{reduction / 100:.2f}%</b><p>Context reduction versus a nonduplicative raw baseline.</p><small>Fixture-specific, not literal model tokens</small></article></div></section>
+
+<section class="section"><div class="section-head reveal"><span class="section-id">07 / LEDGER</span><h2>Work history<br>that verifies.</h2><p>Failed or unverifiable evidence stays visible. Nothing gets silently deleted to make the chart look clean.</p></div>
+<div class="table-wrap reveal"><table class="evidence-table"><thead><tr><th>Record</th><th>Status</th><th>Kind</th><th>Published</th><th>Artifact</th><th>Verification</th></tr></thead><tbody>{_evidence_rows(evidence_dir)}</tbody></table></div></section>
+</main>
+<footer class="shell"><span>AGENTPROOF // TECHNOCORE BRIEF</span><span>INDEPENDENT · PUBLIC DATA · ZERO ELIGIBILITY CLAIMS</span></footer>
 <script src="app.js"></script></body></html>"""
 
 
@@ -197,7 +215,9 @@ def build_site(
     evaluation_path: Path | None = None,
     check: bool = False,
 ) -> bool:
-    public_schemas = Path(__file__).parents[1] / "schemas"
+    project_root = Path(__file__).parents[1]
+    public_schemas = project_root / "schemas"
+    hero_asset = project_root / "assets" / "signal-noise-hero-v1.jpg"
     files = {
         "index.html": render_site(
             evidence_dir,
@@ -210,14 +230,24 @@ def build_site(
     files.update(
         {f"schemas/{path.name}": path.read_text() for path in sorted(public_schemas.glob("*.json"))}
     )
+    binary_files = {"assets/signal-noise-hero-v1.jpg": hero_asset.read_bytes()}
     if check:
-        return all(
+        text_ok = all(
             (site_dir / name).exists() and (site_dir / name).read_text() == value
             for name, value in files.items()
         )
+        binary_ok = all(
+            (site_dir / name).exists() and (site_dir / name).read_bytes() == value
+            for name, value in binary_files.items()
+        )
+        return text_ok and binary_ok
     site_dir.mkdir(parents=True, exist_ok=True)
     for name, value in files.items():
         destination = site_dir / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(value)
+    for name, value in binary_files.items():
+        destination = site_dir / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(value)
     return True

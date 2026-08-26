@@ -1,7 +1,7 @@
 import json
 
 from evals.run_context_eval import evaluate
-from tca.site import build_site, render_site
+from tca.site import SITE_CSS, SITE_JS, build_site, render_site
 
 
 def test_failed_evidence_remains_visible(tmp_path) -> None:
@@ -40,6 +40,7 @@ def test_site_assets_reproduce(tmp_path) -> None:
     assert (site / "index.html").exists()
     assert (site / "app.css").exists()
     assert (site / "app.js").exists()
+    assert (site / "assets" / "signal-noise-hero-v1.jpg").exists()
     assert (site / "schemas" / "context-brief-v1.schema.json").exists()
     assert (site / "schemas" / "context-dashboard-v1.schema.json").exists()
     assert build_site(evidence, site, check=True)
@@ -52,8 +53,21 @@ def test_dashboard_renders_dynamic_claims_and_complete_suppression(tmp_path) -> 
     brief = dashboard["brief"]
     assert metrics["official_recall"] in rendered
     assert f"{metrics['reduction_basis_points'] / 100:.2f}%" in rendered
-    assert f"Deferred by this page budget: {brief['suppressed']['over_budget']}" in rendered
-    assert "Synthetic repetition-stress snapshot" in rendered
+    assert f"DEFERRED {brief['suppressed']['over_budget']}" in rendered
+    assert "SYNTHETIC REPETITION-STRESS SNAPSHOT" in rendered
+
+
+def test_dashboard_uses_plain_language_editorial_hierarchy_and_motion_fallback(tmp_path) -> None:
+    report, dashboard = evaluate()
+    rendered = render_site(tmp_path, dashboard, report)
+    assert "Stop reading" in rendered
+    assert "Turn the<br>firehose down" in rendered
+    assert "Evidence<br>before vibes" in rendered
+    assert "Not an indexer. Not a reputation score. Not an eligibility oracle." in rendered
+    assert 'src="assets/signal-noise-hero-v1.jpg"' in rendered
+    assert "prefers-reduced-motion:reduce" in SITE_CSS
+    assert "IntersectionObserver" in SITE_JS
+    assert "innerHTML" not in SITE_JS
 
 
 def test_dashboard_budget_curve_matches_unmodified_brief() -> None:

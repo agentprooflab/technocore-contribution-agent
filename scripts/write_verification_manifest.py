@@ -43,6 +43,7 @@ def main() -> None:
         ROOT / "verification",
         ROOT / "reports",
         ROOT / "docs",
+        ROOT / "assets",
         ROOT / "dist",
     ]
     paths = [path for group in tracked_groups if group.exists() for path in group.rglob("*")]

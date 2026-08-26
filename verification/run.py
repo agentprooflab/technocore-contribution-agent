@@ -28,6 +28,7 @@ def _source_manifest() -> list[dict[str, str]]:
     paths: set[Path] = {ROOT / "pyproject.toml", ROOT / "uv.lock"}
     for pattern in (
         "config/*.toml",
+        "assets/*.jpg",
         "tca/*.py",
         "tests/*.py",
         "evals/*.py",

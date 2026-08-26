@@ -211,6 +211,7 @@ class State:
                 raise
         if version == 2:
             self._migrate_v3(connection)
+        self._repair_epoch_zero_aliases(connection)
         self._backfill_revisions(connection)
 
     def _migrate_v3(self, connection: sqlite3.Connection) -> None:
@@ -218,80 +219,126 @@ class State:
         try:
             for statement in V3_STATEMENTS:
                 connection.execute(statement)
-            duplicates = connection.execute(
+            # V2 predates exposure labels. Restore only structurally known-public built-in
+            # adapter scopes; private Technocore prefixes and unknown adapters remain closed.
+            public_scope = """source IN ('x', 'github') OR (
+                source = 'technocore'
+                AND scope NOT GLOB 'p-*'
+                AND scope NOT GLOB 'mb-*'
+                AND scope NOT GLOB 'e-p-*'
+                AND scope NOT GLOB 'mb-p-*'
+            )"""
+            connection.execute(
+                f"UPDATE source_cursors SET exposure_class = 'public' WHERE {public_scope}"
+            )
+            connection.execute(
+                f"UPDATE coverage_ranges SET exposure_class = 'public' WHERE {public_scope}"
+            )
+            epoch_zero_rows = connection.execute(
                 """SELECT id, external_id FROM observations
                 WHERE source = 'technocore' AND id GLOB 'technocore:*:0:*'"""
             ).fetchall()
-            for duplicate in duplicates:
-                legacy_id = f"technocore:{duplicate['external_id']}"
-                exists = connection.execute(
-                    "SELECT 1 FROM observations WHERE id = ?", (legacy_id,)
+            for epoch_zero in epoch_zero_rows:
+                canonical_id = f"technocore:{epoch_zero['external_id']}"
+                canonical_exists = connection.execute(
+                    "SELECT 1 FROM observations WHERE id = ?", (canonical_id,)
                 ).fetchone()
-                if not exists:
-                    continue
+                if not canonical_exists:
+                    connection.execute(
+                        """INSERT INTO observations
+                        (id, source, external_id, actor_id, actor_username, kind, title, body,
+                         url, created_at, observed_at, authoritative, raw_json)
+                        SELECT ?, source, external_id, actor_id, actor_username, kind, title, body,
+                               url, created_at, observed_at, authoritative, raw_json
+                        FROM observations WHERE id = ?""",
+                        (canonical_id, epoch_zero["id"]),
+                    )
                 connection.execute(
-                    """INSERT OR IGNORE INTO observation_revisions
+                    """INSERT INTO observation_revisions
                     (observation_id, revision_digest, material_json, first_seen_at, last_seen_at,
                      exposure_class, quarantine_reason, tombstone)
                     SELECT ?, revision_digest, material_json, first_seen_at, last_seen_at,
                     exposure_class, quarantine_reason, tombstone
-                    FROM observation_revisions WHERE observation_id = ?""",
-                    (legacy_id, duplicate["id"]),
+                    FROM observation_revisions WHERE observation_id = ?
+                    ON CONFLICT(observation_id, revision_digest) DO UPDATE SET
+                    first_seen_at=MIN(observation_revisions.first_seen_at, excluded.first_seen_at),
+                    last_seen_at=MAX(observation_revisions.last_seen_at, excluded.last_seen_at),
+                    exposure_class=CASE
+                        WHEN observation_revisions.exposure_class='restricted'
+                          OR excluded.exposure_class='restricted'
+                        THEN 'restricted' ELSE 'public' END,
+                    quarantine_reason=COALESCE(
+                        observation_revisions.quarantine_reason, excluded.quarantine_reason),
+                    tombstone=MAX(observation_revisions.tombstone, excluded.tombstone)""",
+                    (canonical_id, epoch_zero["id"]),
+                )
+                connection.execute(
+                    """INSERT OR IGNORE INTO observation_heads(observation_id, revision_digest)
+                    SELECT ?, revision_digest FROM observation_heads
+                    WHERE observation_id = ?""",
+                    (canonical_id, epoch_zero["id"]),
                 )
                 connection.execute(
                     "UPDATE candidates SET observation_id = ? WHERE observation_id = ?",
-                    (legacy_id, duplicate["id"]),
+                    (canonical_id, epoch_zero["id"]),
                 )
                 connection.execute(
                     """INSERT OR IGNORE INTO acknowledgments
                     (consumer_id, observation_id, revision_digest, acknowledged_at)
                     SELECT consumer_id, ?, revision_digest, acknowledged_at
                     FROM acknowledgments WHERE observation_id = ?""",
-                    (legacy_id, duplicate["id"]),
+                    (canonical_id, epoch_zero["id"]),
                 )
                 connection.execute(
-                    "DELETE FROM acknowledgments WHERE observation_id = ?", (duplicate["id"],)
+                    "DELETE FROM acknowledgments WHERE observation_id = ?", (epoch_zero["id"],)
                 )
                 connection.execute(
-                    "DELETE FROM orientation_cache WHERE observation_id = ?", (duplicate["id"],)
+                    "DELETE FROM orientation_cache WHERE observation_id = ?", (epoch_zero["id"],)
                 )
-                connection.execute("DELETE FROM observations WHERE id = ?", (duplicate["id"],))
-            current_rows = connection.execute(
-                """SELECT o.*, h.revision_digest AS old_digest,
-                r.exposure_class, r.quarantine_reason, r.first_seen_at, r.last_seen_at
-                FROM observations o
-                JOIN observation_heads h ON h.observation_id = o.id
-                JOIN observation_revisions r ON r.observation_id = h.observation_id
-                    AND r.revision_digest = h.revision_digest"""
+                connection.execute("DELETE FROM observations WHERE id = ?", (epoch_zero["id"],))
+
+            revision_rows = connection.execute(
+                """SELECT r.*, CASE WHEN h.revision_digest = r.revision_digest
+                    THEN 1 ELSE 0 END AS is_head
+                FROM observation_revisions r
+                LEFT JOIN observation_heads h ON h.observation_id = r.observation_id"""
             ).fetchall()
-            for row in current_rows:
-                raw = json.loads(row["raw_json"])
-                payload = {
-                    **dict(row),
-                    "source_state": raw.get("state") if isinstance(raw, dict) else None,
-                }
+            for row in revision_rows:
+                old_material = json.loads(row["material_json"])
+                raw = old_material.get("raw")
+                source_state = old_material.get("source_state")
+                if source_state is None and isinstance(raw, dict):
+                    source_state = raw.get("state")
+                payload = {**old_material, "source_state": source_state}
                 material_json = canonical_json(_material_from_payload(payload))
                 new_digest = sha256_text(material_json)
-                if new_digest == row["old_digest"]:
+                if new_digest == row["revision_digest"]:
                     continue
                 connection.execute(
-                    """INSERT OR IGNORE INTO observation_revisions
+                    """INSERT INTO observation_revisions
                     (observation_id, revision_digest, material_json, first_seen_at, last_seen_at,
                      exposure_class, quarantine_reason, tombstone)
-                    VALUES(?, ?, ?, ?, ?, ?, ?, 0)""",
+                    VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(observation_id, revision_digest) DO UPDATE SET
+                    first_seen_at=MIN(observation_revisions.first_seen_at, excluded.first_seen_at),
+                    last_seen_at=MAX(observation_revisions.last_seen_at, excluded.last_seen_at),
+                    exposure_class=CASE
+                        WHEN observation_revisions.exposure_class='restricted'
+                          OR excluded.exposure_class='restricted'
+                        THEN 'restricted' ELSE 'public' END,
+                    quarantine_reason=COALESCE(
+                        observation_revisions.quarantine_reason, excluded.quarantine_reason),
+                    tombstone=MAX(observation_revisions.tombstone, excluded.tombstone)""",
                     (
-                        row["id"],
+                        row["observation_id"],
                         new_digest,
                         material_json,
                         row["first_seen_at"],
                         row["last_seen_at"],
                         row["exposure_class"],
                         row["quarantine_reason"],
+                        row["tombstone"],
                     ),
-                )
-                connection.execute(
-                    "UPDATE observation_heads SET revision_digest = ? WHERE observation_id = ?",
-                    (new_digest, row["id"]),
                 )
                 connection.execute(
                     """INSERT OR IGNORE INTO acknowledgments
@@ -299,9 +346,89 @@ class State:
                     SELECT consumer_id, observation_id, ?, acknowledged_at
                     FROM acknowledgments
                     WHERE observation_id = ? AND revision_digest = ?""",
-                    (new_digest, row["id"], row["old_digest"]),
+                    (new_digest, row["observation_id"], row["revision_digest"]),
                 )
+                if row["is_head"]:
+                    connection.execute(
+                        """UPDATE observation_heads SET revision_digest = ?
+                        WHERE observation_id = ? AND revision_digest = ?""",
+                        (new_digest, row["observation_id"], row["revision_digest"]),
+                    )
             connection.execute("PRAGMA user_version=3")
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+
+    def _repair_epoch_zero_aliases(self, connection: sqlite3.Connection) -> None:
+        """Repair databases opened by pre-release v3 code that skipped unpaired aliases."""
+        rows = connection.execute(
+            """SELECT id, external_id FROM observations
+            WHERE source = 'technocore' AND id GLOB 'technocore:*:0:*'"""
+        ).fetchall()
+        if not rows:
+            return
+        connection.execute("BEGIN IMMEDIATE")
+        try:
+            for row in rows:
+                old_id = str(row["id"])
+                canonical_id = f"technocore:{row['external_id']}"
+                canonical_exists = connection.execute(
+                    "SELECT 1 FROM observations WHERE id = ?", (canonical_id,)
+                ).fetchone()
+                if not canonical_exists:
+                    connection.execute(
+                        """INSERT INTO observations
+                        (id, source, external_id, actor_id, actor_username, kind, title, body,
+                         url, created_at, observed_at, authoritative, raw_json)
+                        SELECT ?, source, external_id, actor_id, actor_username, kind, title, body,
+                               url, created_at, observed_at, authoritative, raw_json
+                        FROM observations WHERE id = ?""",
+                        (canonical_id, old_id),
+                    )
+                connection.execute(
+                    """INSERT INTO observation_revisions
+                    (observation_id, revision_digest, material_json, first_seen_at, last_seen_at,
+                     exposure_class, quarantine_reason, tombstone)
+                    SELECT ?, revision_digest, material_json, first_seen_at, last_seen_at,
+                           exposure_class, quarantine_reason, tombstone
+                    FROM observation_revisions WHERE observation_id = ?
+                    ON CONFLICT(observation_id, revision_digest) DO UPDATE SET
+                    first_seen_at=MIN(observation_revisions.first_seen_at, excluded.first_seen_at),
+                    last_seen_at=MAX(observation_revisions.last_seen_at, excluded.last_seen_at),
+                    exposure_class=CASE
+                        WHEN observation_revisions.exposure_class='restricted'
+                          OR excluded.exposure_class='restricted'
+                        THEN 'restricted' ELSE 'public' END,
+                    quarantine_reason=COALESCE(
+                        observation_revisions.quarantine_reason, excluded.quarantine_reason),
+                    tombstone=MAX(observation_revisions.tombstone, excluded.tombstone)""",
+                    (canonical_id, old_id),
+                )
+                connection.execute(
+                    """INSERT OR IGNORE INTO observation_heads(observation_id, revision_digest)
+                    SELECT ?, revision_digest FROM observation_heads
+                    WHERE observation_id = ?""",
+                    (canonical_id, old_id),
+                )
+                connection.execute(
+                    "UPDATE candidates SET observation_id = ? WHERE observation_id = ?",
+                    (canonical_id, old_id),
+                )
+                connection.execute(
+                    """INSERT OR IGNORE INTO acknowledgments
+                    (consumer_id, observation_id, revision_digest, acknowledged_at)
+                    SELECT consumer_id, ?, revision_digest, acknowledged_at
+                    FROM acknowledgments WHERE observation_id = ?""",
+                    (canonical_id, old_id),
+                )
+                connection.execute(
+                    "DELETE FROM acknowledgments WHERE observation_id = ?", (old_id,)
+                )
+                connection.execute(
+                    "DELETE FROM orientation_cache WHERE observation_id = ?", (old_id,)
+                )
+                connection.execute("DELETE FROM observations WHERE id = ?", (old_id,))
             connection.commit()
         except Exception:
             connection.rollback()
@@ -426,11 +553,21 @@ class State:
         material_json = canonical_json(_material_from_payload(item))
         revision_digest = sha256_text(material_json)
         existing_head = connection.execute(
-            "SELECT revision_digest FROM observation_heads WHERE observation_id = ?",
+            """SELECT h.revision_digest, r.exposure_class, r.quarantine_reason
+            FROM observation_heads h
+            JOIN observation_revisions r ON r.observation_id = h.observation_id
+                AND r.revision_digest = h.revision_digest
+            WHERE h.observation_id = ?""",
             (payload["id"],),
         ).fetchone()
+        requested_exposure = self._exposure_class(item)
+        effective_exposure = (
+            "restricted"
+            if requested_exposure == "restricted"
+            or (existing_head and existing_head["exposure_class"] == "restricted")
+            else "public"
+        )
         if existing_head and existing_head["revision_digest"] == revision_digest:
-            exposure = self._exposure_class(item)
             quarantine = self._quarantine_reason(item)
             connection.execute(
                 """UPDATE observation_revisions SET last_seen_at = ?,
@@ -440,7 +577,7 @@ class State:
                 WHERE observation_id = ? AND revision_digest = ?""",
                 (
                     payload["observed_at"],
-                    exposure,
+                    effective_exposure,
                     quarantine,
                     payload["id"],
                     revision_digest,
@@ -469,7 +606,7 @@ class State:
                 material_json,
                 payload["observed_at"],
                 payload["observed_at"],
-                self._exposure_class(item),
+                effective_exposure,
                 self._quarantine_reason(item),
             ),
         )
@@ -480,6 +617,14 @@ class State:
                 """UPDATE observation_revisions SET quarantine_reason = 'immutable_conflict'
                 WHERE observation_id = ? AND revision_digest = ?""",
                 (payload["id"], revision_digest),
+            )
+            connection.execute(
+                """UPDATE observation_revisions SET
+                exposure_class = CASE WHEN exposure_class = 'restricted' OR ? = 'restricted'
+                    THEN 'restricted' ELSE 'public' END,
+                quarantine_reason = COALESCE(quarantine_reason, 'immutable_conflict')
+                WHERE observation_id = ? AND revision_digest = ?""",
+                (effective_exposure, payload["id"], existing_head["revision_digest"]),
             )
             return True, existing_head["revision_digest"]
 
@@ -586,14 +731,23 @@ class State:
         recorded_at: str,
         exposure_class: str,
     ) -> None:
-        existing = [
-            (int(row["start_value"]), int(row["end_value"]), str(row["state"]))
-            for row in connection.execute(
-                """SELECT start_value, end_value, state FROM coverage_ranges
+        existing_rows = list(
+            connection.execute(
+                """SELECT start_value, end_value, state, exposure_class FROM coverage_ranges
                 WHERE source = ? AND scope = ? AND epoch = ?""",
                 (source, scope, epoch),
             )
+        )
+        existing = [
+            (int(row["start_value"]), int(row["end_value"]), str(row["state"]))
+            for row in existing_rows
         ]
+        effective_exposure = (
+            "restricted"
+            if exposure_class == "restricted"
+            or any(row["exposure_class"] == "restricted" for row in existing_rows)
+            else "public"
+        )
         normalized = self._normalize_ranges(existing + additions)
         connection.execute(
             "DELETE FROM coverage_ranges WHERE source = ? AND scope = ? AND epoch = ?",
@@ -604,7 +758,7 @@ class State:
             (source, scope, epoch, start_value, end_value, state, recorded_at, exposure_class)
             VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
             [
-                (source, scope, epoch, start, end, state, recorded_at, exposure_class)
+                (source, scope, epoch, start, end, state, recorded_at, effective_exposure)
                 for start, end, state in normalized
             ],
         )
@@ -627,7 +781,8 @@ class State:
         with self.connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
-                "SELECT cursor, epoch FROM source_cursors WHERE source = ? AND scope = ?",
+                """SELECT cursor, epoch, exposure_class FROM source_cursors
+                WHERE source = ? AND scope = ?""",
                 (source, scope),
             ).fetchone()
             current = row["cursor"] if row else None
@@ -637,6 +792,11 @@ class State:
                     f"stale cursor for {source}:{scope}: expected {expected_cursor!r}, "
                     f"found {current!r} at epoch {current_epoch}"
                 )
+            effective_exposure = (
+                "restricted"
+                if exposure_class == "restricted" or (row and row["exposure_class"] == "restricted")
+                else "public"
+            )
             changed = 0
             for item in observations:
                 item_changed, _ = self._upsert_observation(connection, item)
@@ -648,7 +808,7 @@ class State:
                 epoch,
                 coverage_ranges,
                 recorded_at,
-                exposure_class,
+                effective_exposure,
             )
             connection.execute(
                 """INSERT INTO source_cursors
@@ -656,7 +816,11 @@ class State:
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(source, scope) DO UPDATE SET epoch=excluded.epoch,
                 cursor=excluded.cursor, state=excluded.state, not_before=excluded.not_before,
-                updated_at=excluded.updated_at, exposure_class=excluded.exposure_class""",
+                updated_at=excluded.updated_at,
+                exposure_class=CASE
+                    WHEN source_cursors.exposure_class='restricted'
+                      OR excluded.exposure_class='restricted'
+                    THEN 'restricted' ELSE 'public' END""",
                 (
                     source,
                     scope,
@@ -665,10 +829,67 @@ class State:
                     cursor_state,
                     not_before,
                     recorded_at,
-                    exposure_class,
+                    effective_exposure,
                 ),
             )
         return changed
+
+    def recover_ambiguous_epoch(
+        self,
+        *,
+        source: str,
+        scope: str,
+        expected_epoch: int,
+        expected_cursor: str,
+        exposure_class: str = "public",
+    ) -> int:
+        """Advance a confirmed rewind to a fresh local epoch without joining coverage."""
+        recovered_at = iso_now()
+        with self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                """SELECT epoch, cursor, state, exposure_class FROM source_cursors
+                WHERE source = ? AND scope = ?""",
+                (source, scope),
+            ).fetchone()
+            if (
+                not row
+                or int(row["epoch"]) != expected_epoch
+                or row["cursor"] != expected_cursor
+                or row["state"] != "epoch_ambiguous"
+            ):
+                found = (
+                    "missing"
+                    if not row
+                    else f"epoch={row['epoch']} cursor={row['cursor']!r} state={row['state']}"
+                )
+                raise StaleCursorError(
+                    f"ambiguous epoch changed for {source}:{scope}; found {found}"
+                )
+            next_epoch = expected_epoch + 1
+            effective_exposure = (
+                "restricted"
+                if exposure_class == "restricted" or row["exposure_class"] == "restricted"
+                else "public"
+            )
+            updated = connection.execute(
+                """UPDATE source_cursors SET epoch = ?, cursor = NULL, state = 'active',
+                not_before = NULL, updated_at = ?, exposure_class = ?
+                WHERE source = ? AND scope = ? AND epoch = ? AND cursor = ?
+                    AND state = 'epoch_ambiguous'""",
+                (
+                    next_epoch,
+                    recovered_at,
+                    effective_exposure,
+                    source,
+                    scope,
+                    expected_epoch,
+                    expected_cursor,
+                ),
+            )
+            if updated.rowcount != 1:
+                raise StaleCursorError(f"failed to recover ambiguous epoch for {source}:{scope}")
+        return next_epoch
 
     def set_source_health(
         self,
@@ -681,16 +902,25 @@ class State:
     ) -> None:
         with self.connect() as connection:
             row = connection.execute(
-                "SELECT epoch, cursor FROM source_cursors WHERE source = ? AND scope = ?",
+                """SELECT epoch, cursor, exposure_class FROM source_cursors
+                WHERE source = ? AND scope = ?""",
                 (source, scope),
             ).fetchone()
+            effective_exposure = (
+                "restricted"
+                if exposure_class == "restricted" or (row and row["exposure_class"] == "restricted")
+                else "public"
+            )
             connection.execute(
                 """INSERT INTO source_cursors
                 (source, scope, epoch, cursor, state, not_before, updated_at, exposure_class)
                 VALUES(?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(source, scope) DO UPDATE SET state=excluded.state,
                 not_before=excluded.not_before, updated_at=excluded.updated_at,
-                exposure_class=excluded.exposure_class""",
+                exposure_class=CASE
+                    WHEN source_cursors.exposure_class='restricted'
+                      OR excluded.exposure_class='restricted'
+                    THEN 'restricted' ELSE 'public' END""",
                 (
                     source,
                     scope,
@@ -699,7 +929,7 @@ class State:
                     health,
                     not_before,
                     iso_now(),
-                    exposure_class,
+                    effective_exposure,
                 ),
             )
 

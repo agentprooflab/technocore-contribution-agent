@@ -102,6 +102,10 @@ def build_parser() -> argparse.ArgumentParser:
     brief_parser.add_argument("--mention", action="append", default=[])
     brief_parser.add_argument("--budget", type=int, default=800)
     brief_parser.add_argument("--as-of")
+    brief_parser.add_argument(
+        "--since",
+        help="return observations newer than a completed brief:v2 watermark",
+    )
     brief_parser.add_argument("--continue-from")
 
     expand_parser = sub.add_parser("expand", help="expand exact evidence revisions")
@@ -206,6 +210,7 @@ def main(argv: list[str] | None = None) -> None:
                     mention_markers=args.mention,
                     requested_budget=args.budget,
                     as_of=args.as_of,
+                    since=args.since,
                     continuation=args.continue_from,
                 )
             )

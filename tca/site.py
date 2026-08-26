@@ -121,18 +121,25 @@ def render_site(
     context: dict[str, Any] | None = None,
     evaluation: dict[str, Any] | None = None,
 ) -> str:
-    context = context or {}
+    envelope = context or {}
     evaluation = evaluation or {}
-    reduction = int(evaluation.get("consumer_context_reduction_basis_points", 0))
-    known_missing = sum(int(item.get("known_missing", 0)) for item in context.get("coverage", []))
+    context = envelope.get("brief", {})
+    coverage_details = envelope.get("coverage_details", context.get("coverage", []))
+    metrics = envelope.get("metrics", {})
+    reduction = int(metrics.get("reduction_basis_points", 0))
+    known_missing = sum(int(item.get("known_missing", 0)) for item in coverage_details)
     items = context.get("items", [])
     curve_nodes = "".join(
         f'<span class="curve-point" data-budget="{int(point.get("budget", 0))}" '
         f'data-critical="{int(point.get("critical_items_remaining", 0))}" '
         f'data-ids="{html.escape(",".join(point.get("evidence_ids", [])))}"></span>'
-        for point in context.get("budget_curve", [])
+        for point in envelope.get("budget_curve", [])
     )
     suppressed = context.get("suppressed", {})
+    recall = html.escape(str(metrics.get("official_recall", "0/0")))
+    false_positives = int(metrics.get("official_false_positives", 0))
+    page_budget = int(metrics.get("page_budget_units", 0))
+    page_count = int(metrics.get("page_count", 0))
     install_cli = (
         "tca brief --consumer my-agent --budget 800\n"
         "tca expand OBSERVATION@REVISION --budget 600\n"
@@ -164,17 +171,17 @@ def render_site(
 {curve_nodes}</aside>
 <div class="panel item-list" id="attention-list">{_attention_cards(context)}</div></div>
 <p class="subtle">Synthetic repetition-stress snapshot. It is not a live network census.</p>
-<p class="subtle">Suppressed: acknowledged {int(suppressed.get("acknowledged", 0))}, duplicates {int(suppressed.get("duplicates", 0))}, low relevance {int(suppressed.get("low_relevance", 0))}, quarantined {int(suppressed.get("quarantined", 0))}.</p></section>
+<p class="subtle">Suppressed: acknowledged {int(suppressed.get("acknowledged", 0))}, duplicates {int(suppressed.get("duplicates", 0))}, low relevance {int(suppressed.get("low_relevance", 0))}, quarantined {int(suppressed.get("quarantined", 0))}. Deferred by this page budget: {int(suppressed.get("over_budget", 0))}.</p></section>
 <section class="section"><div class="section-head"><div><div class="eyebrow">Coverage</div><h2>Silence is not certainty</h2></div>
-<p>Observed, pending, unknown and confirmed-lost ranges remain separate.</p></div><div class="coverage-grid">{_coverage_cards(context)}</div></section>
+<p>Observed, pending, unknown and confirmed-lost ranges remain separate.</p></div><div class="coverage-grid">{_coverage_cards({"coverage": coverage_details})}</div></section>
 <section class="section"><div class="section-head"><div><div class="eyebrow">Pipeline</div><h2>Evidence before interpretation</h2></div></div>
 <div class="pipeline"><div class="stage"><b>01 · Observe</b>Public allowlisted sources.</div><div class="stage"><b>02 · Preserve</b>Immutable revisions.</div>
 <div class="stage"><b>03 · Select</b>Observable match reasons.</div><div class="stage"><b>04 · Budget</b>Atomic evidence packing.</div><div class="stage"><b>05 · Expand</b>Exact content on demand.</div></div></section>
 <section class="section"><div class="section-head"><div><div class="eyebrow">Install</div><h2>One local tool, three surfaces</h2></div>
 <p>No wallet, new DID or model provider is required for evidence mode.</p></div><div class="install"><pre class="code">{html.escape(install_mcp)}</pre><pre class="code">{html.escape(install_cli)}</pre></div></section>
 <section class="section"><div class="section-head"><div><div class="eyebrow">Verification</div><h2>Claims with receipts</h2></div></div>
-<div class="proof"><article><b>30/30</b><p>Official-source positives retained across paged 800-unit briefs.</p></article><article><b>0</b><p>Hard-negative official false positives.</p></article>
-<article><b>{reduction / 100:.2f}%</b><p>Reduction on the digest-pinned corpus.</p></article></div></section>
+<div class="proof"><article><b>{recall}</b><p>Official-source positives retained across {page_count} paged {page_budget}-unit briefs.</p></article><article><b>{false_positives}</b><p>Hard-negative official false positives.</p></article>
+<article><b>{reduction / 100:.2f}%</b><p>Reduction against the nonduplicative minimal-raw-observation baseline on this fixture.</p></article></div></section>
 <section class="section"><div class="section-head"><div><div class="eyebrow">Contribution evidence</div><h2>Signed work history</h2></div></div>
 <div class="panel"><table class="evidence-table"><thead><tr><th>Record</th><th>Status</th><th>Kind</th><th>Published</th><th>Artifact</th><th>Verification</th></tr></thead>
 <tbody>{_evidence_rows(evidence_dir)}</tbody></table></div></section></main>
@@ -190,6 +197,7 @@ def build_site(
     evaluation_path: Path | None = None,
     check: bool = False,
 ) -> bool:
+    public_schemas = Path(__file__).parents[1] / "schemas"
     files = {
         "index.html": render_site(
             evidence_dir,
@@ -199,6 +207,9 @@ def build_site(
         "app.css": SITE_CSS.strip() + "\n",
         "app.js": SITE_JS.strip() + "\n",
     }
+    files.update(
+        {f"schemas/{path.name}": path.read_text() for path in sorted(public_schemas.glob("*.json"))}
+    )
     if check:
         return all(
             (site_dir / name).exists() and (site_dir / name).read_text() == value
@@ -206,5 +217,7 @@ def build_site(
         )
     site_dir.mkdir(parents=True, exist_ok=True)
     for name, value in files.items():
-        (site_dir / name).write_text(value)
+        destination = site_dir / name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(value)
     return True

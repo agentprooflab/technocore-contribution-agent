@@ -155,7 +155,7 @@ def test_brief_is_digest_deterministic_for_fixed_state_and_time(tmp_path) -> Non
     assert payload_digest(first) == payload_digest(second)
 
 
-def test_dedupe_keeps_highest_authority_and_acknowledges_whole_group(tmp_path) -> None:
+def test_dedupe_keeps_highest_authority_and_acknowledgment_is_revision_scoped(tmp_path) -> None:
     state = State(tmp_path / "state.db")
     body = "Complete this official task by Friday"
     state.upsert_observation(
@@ -190,7 +190,52 @@ def test_dedupe_keeps_highest_authority_and_acknowledges_whole_group(tmp_path) -
         requested_budget=900,
         as_of="2026-08-27T01:01:00+00:00",
     )
-    assert again["items"] == []
+    assert len(again["items"]) == 1
+    assert again["items"][0]["source"] == "technocore"
+    assert again["items"][0]["excerpt_status"] == "withheld_untrusted"
+
+
+def test_acknowledged_community_copy_does_not_hide_later_official_task(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    body = "Complete this official task by Friday"
+    state.upsert_observation(
+        {
+            "id": "technocore:chat:1",
+            "source": "technocore",
+            "external_id": "chat:1",
+            "actor_id": "did:key:z6MkCopy",
+            "kind": "room_message",
+            "title": body,
+            "body": body,
+            "authoritative": False,
+            "created_at": "2026-08-27T00:00:00+00:00",
+            "observed_at": "2026-08-27T00:00:01+00:00",
+        }
+    )
+    community = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=900,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    acknowledge_observations(state, "agentproof", [community["items"][0]["evidence_id"]])
+
+    add(
+        state,
+        2,
+        body=body,
+        created_at="2026-08-27T00:01:00+00:00",
+        observed_at="2026-08-27T00:01:01+00:00",
+    )
+    official = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=900,
+        as_of="2026-08-27T01:01:00+00:00",
+    )
+    assert len(official["items"]) == 1
+    assert official["items"][0]["source"] == "x"
+    assert official["items"][0]["priority"] == 100
 
 
 def test_continuation_retrieves_every_critical_item_once(tmp_path) -> None:
@@ -215,6 +260,132 @@ def test_continuation_retrieves_every_critical_item_once(tmp_path) -> None:
             break
     assert len(evidence_ids) == 10
     assert len(set(evidence_ids)) == 10
+
+
+def test_too_small_page_reports_exact_budget_that_makes_progress(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    add(state, 1)
+    with pytest.raises(ContextError) as error:
+        build_brief(
+            state,
+            consumer_id="agentproof",
+            requested_budget=300,
+            as_of="2026-08-27T01:00:00+00:00",
+        )
+    assert error.value.code == "BUDGET_TOO_SMALL"
+    required = error.value.details["required_units"]
+    assert error.value.details["evidence_id"].startswith("x:1@")
+
+    page = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=required,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    assert len(page["items"]) == 1
+    assert page["budget"]["estimated_used"] == required
+
+
+def test_brief_cursor_returns_only_revisions_after_watermark(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    add(state, 1)
+    first = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=900,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    cursor = first["brief_cursor"]
+    repeated = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=900,
+        as_of="2026-08-27T01:01:00+00:00",
+        since=cursor,
+    )
+    assert repeated["items"] == []
+
+    add(state, 2, observed_at="2026-08-27T01:02:00+00:00")
+    delta = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=900,
+        as_of="2026-08-27T01:03:00+00:00",
+        since=cursor,
+    )
+    assert [item["evidence_id"].split("@", 1)[0] for item in delta["items"]] == ["x:2"]
+
+
+def test_multi_expansion_reserves_a_stub_for_every_requested_id(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    add(state, 1, body="a" * 2000)
+    add(state, 2, body="b" * 2000)
+    brief = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=2000,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    references = [item["evidence_id"] for item in brief["items"]]
+    with pytest.raises(ContextError) as error:
+        expand_observations(state, references, requested_budget=1)
+    required = error.value.details["required_units"]
+    expanded = expand_observations(
+        state,
+        references,
+        requested_budget=required,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    assert [item["evidence_id"] for item in expanded["items"]] == references
+    assert all(item["status"] == "omitted_budget" for item in expanded["items"])
+
+
+def test_expansion_item_required_units_succeeds_on_first_retry(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    add(state, 1, body="a" * 1000)
+    brief = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=1200,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    reference = brief["items"][0]["evidence_id"]
+    partial = expand_observations(
+        state,
+        [reference],
+        requested_budget=200,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    required = partial["items"][0]["required_units"]
+    expanded = expand_observations(
+        state,
+        [reference],
+        requested_budget=required,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    assert expanded["items"][0]["status"] == "included"
+    assert expanded["budget"]["estimated_used"] == required
+
+
+def test_non_authoritative_public_source_excerpt_is_withheld(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    body = "Community nonce analysis"
+    add(
+        state,
+        1,
+        kind="announcement",
+        authoritative=False,
+        body=body,
+    )
+    brief = build_brief(
+        state,
+        consumer_id="agentproof",
+        interests=["nonce"],
+        requested_budget=900,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    assert brief["items"][0]["excerpt_status"] == "withheld_untrusted"
+    assert body not in brief["items"][0]["excerpt"]
 
 
 def test_technocore_excerpt_is_withheld_until_expansion(tmp_path) -> None:

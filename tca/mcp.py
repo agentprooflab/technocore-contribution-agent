@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import hashlib
 import json
 import os
 import sys
@@ -15,6 +17,132 @@ PROTOCOL_VERSION = "2025-06-18"
 SERVER_INFO = {"name": "technocore-brief", "version": "0.2.0"}
 MAX_REQUEST_BYTES = 1_048_576
 MAX_JSON_DEPTH = 32
+COVERAGE_PAGE_DEFAULT = 25
+COVERAGE_PAGE_MAX = 100
+
+ERROR_OUTPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["schema", "error"],
+    "properties": {
+        "schema": {"const": "technocore-context-error/v1"},
+        "error": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["code", "message", "retryable", "details"],
+            "properties": {
+                "code": {"type": "string"},
+                "message": {"type": "string"},
+                "retryable": {"type": "boolean"},
+                "details": {"type": "object"},
+            },
+        },
+    },
+}
+
+BUDGET_OUTPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["requested", "estimated_used", "method", "scope"],
+    "properties": {
+        "requested": {"type": "integer", "minimum": 1},
+        "estimated_used": {"type": "integer", "minimum": 0},
+        "method": {"const": "canonical-utf8-div3-v1"},
+        "scope": {"const": "domain_payload_only"},
+    },
+}
+
+COVERAGE_SOURCE_OUTPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": [
+        "source",
+        "scope",
+        "epoch",
+        "status",
+        "cursor",
+        "known_missing",
+        "unknown_gap",
+        "pending_fetch",
+        "observed",
+    ],
+    "properties": {
+        "source": {"type": "string"},
+        "scope": {"type": "string"},
+        "epoch": {"type": "integer", "minimum": 0},
+        "status": {"type": "string"},
+        "cursor": {"type": ["string", "null"]},
+        "known_missing": {"type": "integer", "minimum": 0},
+        "unknown_gap": {"type": "integer", "minimum": 0},
+        "pending_fetch": {"type": "integer", "minimum": 0},
+        "observed": {"type": "integer", "minimum": 0},
+    },
+}
+
+
+def _success_or_error(success_schema: dict[str, Any]) -> dict[str, Any]:
+    return {"type": "object", "oneOf": [success_schema, ERROR_OUTPUT_SCHEMA]}
+
+
+BRIEF_OUTPUT_SCHEMA = _success_or_error(
+    {
+        "type": "object",
+        "additionalProperties": False,
+        "required": [
+            "schema",
+            "as_of",
+            "consumer_id",
+            "profile_digest",
+            "brief_cursor",
+            "budget",
+            "coverage",
+            "items",
+            "critical_items_remaining",
+            "continuation_cursor",
+            "suppressed",
+        ],
+        "properties": {
+            "schema": {"const": "technocore-context-brief/v1"},
+            "as_of": {"type": "string"},
+            "consumer_id": {"type": "string"},
+            "profile_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "brief_cursor": {"type": "string"},
+            "budget": BUDGET_OUTPUT_SCHEMA,
+            "coverage": {"type": "array", "items": COVERAGE_SOURCE_OUTPUT_SCHEMA},
+            "items": {"type": "array", "items": {"type": "object"}},
+            "critical_items_remaining": {"type": "integer", "minimum": 0},
+            "continuation_cursor": {"type": ["string", "null"]},
+            "suppressed": {"type": "object"},
+        },
+    }
+)
+
+EXPANSION_OUTPUT_SCHEMA = _success_or_error(
+    {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["schema", "as_of", "budget", "items"],
+        "properties": {
+            "schema": {"const": "technocore-context-expansion/v1"},
+            "as_of": {"type": "string"},
+            "budget": BUDGET_OUTPUT_SCHEMA,
+            "items": {"type": "array", "items": {"type": "object"}},
+        },
+    }
+)
+
+COVERAGE_OUTPUT_SCHEMA = _success_or_error(
+    {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["schema", "sources", "next_cursor"],
+        "properties": {
+            "schema": {"const": "technocore-context-coverage/v1"},
+            "sources": {"type": "array", "items": COVERAGE_SOURCE_OUTPUT_SCHEMA},
+            "next_cursor": {"type": ["string", "null"]},
+        },
+    }
+)
 
 TOOLS = [
     {
@@ -35,18 +163,22 @@ TOOLS = [
                 "budget_units": {"type": "integer", "minimum": 1, "maximum": 100000},
                 "as_of": {"type": "string", "maxLength": 64},
                 "continuation": {"type": "string", "maxLength": 2048},
+                "since": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "description": (
+                        "A completed brief:v2 cursor. Return only observation revisions after "
+                        "its durable watermark."
+                    ),
+                },
                 "mention_markers": {
                     "type": "array",
                     "maxItems": 16,
-                    "items": {"type": "string", "maxLength": 160},
+                    "items": {"type": "string", "maxLength": 80},
                 },
             },
         },
-        "outputSchema": {
-            "type": "object",
-            "required": ["schema", "coverage", "items", "budget"],
-            "properties": {"schema": {"const": "technocore-context-brief/v1"}},
-        },
+        "outputSchema": BRIEF_OUTPUT_SCHEMA,
         "annotations": {
             "readOnlyHint": True,
             "destructiveHint": False,
@@ -74,11 +206,7 @@ TOOLS = [
                 "budget_units": {"type": "integer", "minimum": 1, "maximum": 100000},
             },
         },
-        "outputSchema": {
-            "type": "object",
-            "required": ["schema", "items", "budget"],
-            "properties": {"schema": {"const": "technocore-context-expansion/v1"}},
-        },
+        "outputSchema": EXPANSION_OUTPUT_SCHEMA,
         "annotations": {
             "readOnlyHint": True,
             "destructiveHint": False,
@@ -88,13 +216,23 @@ TOOLS = [
     },
     {
         "name": "coverage_report",
-        "description": "Report observed, pending, unknown, and confirmed-lost source ranges.",
-        "inputSchema": {"type": "object", "additionalProperties": False, "properties": {}},
-        "outputSchema": {
+        "description": (
+            "Return a bounded page of compact public-source coverage summaries. "
+            "Use next_cursor to retrieve another page."
+        ),
+        "inputSchema": {
             "type": "object",
-            "required": ["schema", "sources"],
-            "properties": {"schema": {"const": "technocore-context-coverage/v1"}},
+            "additionalProperties": False,
+            "properties": {
+                "cursor": {"type": "string", "maxLength": 2048},
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": COVERAGE_PAGE_MAX,
+                },
+            },
         },
+        "outputSchema": COVERAGE_OUTPUT_SCHEMA,
         "annotations": {
             "readOnlyHint": True,
             "destructiveHint": False,
@@ -170,6 +308,89 @@ def _reject_unknown(arguments: dict[str, Any], allowed: set[str]) -> None:
         )
 
 
+def _bounded_string_array(
+    value: Any,
+    name: str,
+    *,
+    minimum: int = 0,
+    maximum: int,
+    max_length: int,
+) -> list[str]:
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ContextError("INVALID_ARGUMENTS", f"{name} must be a string array")
+    if not minimum <= len(value) <= maximum or any(len(item) > max_length for item in value):
+        raise ContextError("INVALID_ARGUMENTS", f"{name} exceed declared bounds")
+    return value
+
+
+def _bounded_integer(value: Any, name: str, *, minimum: int, maximum: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ContextError("INVALID_ARGUMENTS", f"{name} must be an integer")
+    if not minimum <= value <= maximum:
+        raise ContextError(
+            "INVALID_ARGUMENTS",
+            f"{name} must be between {minimum} and {maximum}",
+        )
+    return value
+
+
+def _coverage_cursor(offset: int, snapshot_digest: str) -> str:
+    encoded = base64.urlsafe_b64encode(
+        canonical_json({"offset": offset, "snapshot_digest": snapshot_digest, "version": 1}).encode(
+            "utf-8"
+        )
+    ).decode("ascii")
+    return "coverage:v1:" + encoded.rstrip("=")
+
+
+def _parse_coverage_cursor(value: str | None, snapshot_digest: str) -> int:
+    if value is None:
+        return 0
+    if not value.startswith("coverage:v1:"):
+        raise ContextError("CURSOR_VERSION_UNSUPPORTED", "unsupported coverage cursor")
+    token = value.removeprefix("coverage:v1:")
+    try:
+        padding = "=" * (-len(token) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(token + padding))
+    except (ValueError, json.JSONDecodeError) as exc:
+        raise ContextError("INVALID_CURSOR", "invalid coverage cursor") from exc
+    if not isinstance(payload, dict) or payload.get("version") != 1:
+        raise ContextError("INVALID_CURSOR", "invalid coverage cursor")
+    if payload.get("snapshot_digest") != snapshot_digest:
+        raise ContextError("CURSOR_STALE", "coverage changed after the cursor was issued")
+    offset = payload.get("offset")
+    if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
+        raise ContextError("INVALID_CURSOR", "coverage cursor offset is invalid")
+    return offset
+
+
+def _coverage_page(state: State, arguments: dict[str, Any]) -> dict[str, Any]:
+    _reject_unknown(arguments, {"cursor", "limit"})
+    cursor = arguments.get("cursor")
+    if cursor is not None and (not isinstance(cursor, str) or len(cursor) > 2048):
+        raise ContextError("INVALID_ARGUMENTS", "cursor must be a bounded string")
+    limit = _bounded_integer(
+        arguments.get("limit", COVERAGE_PAGE_DEFAULT),
+        "limit",
+        minimum=1,
+        maximum=COVERAGE_PAGE_MAX,
+    )
+    reports = coverage_report(state, include_ranges=False)
+    snapshot_digest = hashlib.sha256(canonical_json(reports).encode("utf-8")).hexdigest()
+    offset = _parse_coverage_cursor(cursor, snapshot_digest)
+    if offset > len(reports):
+        raise ContextError("INVALID_CURSOR", "coverage cursor offset exceeds source count")
+    page = reports[offset : offset + limit]
+    next_offset = offset + len(page)
+    return {
+        "schema": "technocore-context-coverage/v1",
+        "sources": page,
+        "next_cursor": (
+            _coverage_cursor(next_offset, snapshot_digest) if next_offset < len(reports) else None
+        ),
+    }
+
+
 def call_tool(
     state: State,
     *,
@@ -180,16 +401,27 @@ def call_tool(
     if name == "get_relevant_updates":
         _reject_unknown(
             arguments,
-            {"interests", "budget_units", "as_of", "continuation", "mention_markers"},
+            {
+                "interests",
+                "budget_units",
+                "as_of",
+                "continuation",
+                "since",
+                "mention_markers",
+            },
         )
-        interests = arguments.get("interests", [])
-        if not isinstance(interests, list) or not all(isinstance(item, str) for item in interests):
-            raise ContextError("INVALID_ARGUMENTS", "interests must be a string array")
-        markers = arguments.get("mention_markers", [])
-        if not isinstance(markers, list) or not all(isinstance(item, str) for item in markers):
-            raise ContextError("INVALID_ARGUMENTS", "mention_markers must be a string array")
-        if len(markers) > 16 or any(len(item) > 160 for item in markers):
-            raise ContextError("INVALID_ARGUMENTS", "mention_markers exceed declared bounds")
+        interests = _bounded_string_array(
+            arguments.get("interests", []),
+            "interests",
+            maximum=32,
+            max_length=80,
+        )
+        markers = _bounded_string_array(
+            arguments.get("mention_markers", []),
+            "mention_markers",
+            maximum=16,
+            max_length=80,
+        )
         budget = _bounded_budget(arguments.get("budget_units", 800))
         as_of = arguments.get("as_of")
         if as_of is not None and (not isinstance(as_of, str) or len(as_of) > 64):
@@ -199,6 +431,9 @@ def call_tool(
             not isinstance(continuation, str) or len(continuation) > 2048
         ):
             raise ContextError("INVALID_ARGUMENTS", "continuation must be a bounded string")
+        since = arguments.get("since")
+        if since is not None and (not isinstance(since, str) or len(since) > 2048):
+            raise ContextError("INVALID_ARGUMENTS", "since must be a bounded string")
         return build_brief(
             state,
             consumer_id=consumer_id,
@@ -207,48 +442,66 @@ def call_tool(
             requested_budget=budget,
             as_of=as_of,
             continuation=continuation,
+            since=since,
         )
     if name == "expand_observations":
         _reject_unknown(arguments, {"evidence_ids", "budget_units"})
-        evidence_ids = arguments.get("evidence_ids")
-        if not isinstance(evidence_ids, list) or not all(
-            isinstance(item, str) for item in evidence_ids
-        ):
-            raise ContextError("INVALID_ARGUMENTS", "evidence_ids must be a string array")
-        if len(evidence_ids) > 50 or any(len(item) > 512 for item in evidence_ids):
-            raise ContextError("INVALID_ARGUMENTS", "evidence_ids exceed declared bounds")
+        evidence_ids = _bounded_string_array(
+            arguments.get("evidence_ids"),
+            "evidence_ids",
+            minimum=1,
+            maximum=50,
+            max_length=512,
+        )
         budget = _bounded_budget(arguments.get("budget_units", 800))
         return expand_observations(state, evidence_ids, requested_budget=budget)
     if name == "coverage_report":
-        _reject_unknown(arguments, set())
-        return {"schema": "technocore-context-coverage/v1", "sources": coverage_report(state)}
+        return _coverage_page(state, arguments)
     raise ContextError("METHOD_NOT_FOUND", f"unknown read-only tool: {name}")
 
 
 def _bounded_budget(value: Any) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise ContextError("INVALID_ARGUMENTS", "budget_units must be an integer")
-    if not 1 <= value <= 100000:
-        raise ContextError("INVALID_ARGUMENTS", "budget_units must be between 1 and 100000")
-    return value
+    return _bounded_integer(value, "budget_units", minimum=1, maximum=100000)
 
 
 def handle_request(state: State, consumer_id: str, request: Any) -> dict[str, Any] | None:
     if not isinstance(request, dict):
         return _rpc_error(None, -32600, "Invalid Request")
+    is_notification = "id" not in request
     request_id = request.get("id")
     method = request.get("method")
     if request.get("jsonrpc") != "2.0" or not isinstance(method, str):
         return _rpc_error(request_id, -32600, "Invalid Request")
-    is_notification = "id" not in request
-    if method == "notifications/initialized":
+    if is_notification:
         return None
+    if isinstance(request_id, bool) or not isinstance(request_id, (int, str)):
+        return _rpc_error(None, -32600, "Invalid Request")
+    if method.startswith("notifications/"):
+        return _rpc_error(request_id, -32600, "Invalid Request")
     if method == "initialize":
         params = request.get("params")
         if not isinstance(params, dict):
             return _rpc_error(request_id, -32602, "Invalid params")
         required = {"protocolVersion", "capabilities", "clientInfo"}
-        if not required.issubset(params):
+        if not required.issubset(params) or set(params) - (required | {"_meta"}):
+            return _rpc_error(request_id, -32602, "Invalid params")
+        protocol_version = params.get("protocolVersion")
+        capabilities = params.get("capabilities")
+        client_info = params.get("clientInfo")
+        metadata = params.get("_meta")
+        if (
+            not isinstance(protocol_version, str)
+            or not protocol_version
+            or len(protocol_version) > 64
+            or not isinstance(capabilities, dict)
+            or not isinstance(client_info, dict)
+            or not isinstance(client_info.get("name"), str)
+            or not client_info["name"]
+            or not isinstance(client_info.get("version"), str)
+            or not client_info["version"]
+            or ("title" in client_info and not isinstance(client_info["title"], str))
+            or (metadata is not None and not isinstance(metadata, dict))
+        ):
             return _rpc_error(request_id, -32602, "Invalid params")
         return {
             "jsonrpc": "2.0",
@@ -260,21 +513,29 @@ def handle_request(state: State, consumer_id: str, request: Any) -> dict[str, An
             },
         }
     if method == "ping":
-        if is_notification:
-            return None
+        params = request.get("params", {})
+        if not isinstance(params, dict) or set(params) - {"_meta"}:
+            return _rpc_error(request_id, -32602, "Invalid params")
+        if "_meta" in params and not isinstance(params["_meta"], dict):
+            return _rpc_error(request_id, -32602, "Invalid params")
         return {"jsonrpc": "2.0", "id": request_id, "result": {}}
     if method == "tools/list":
-        if is_notification:
-            return None
+        params = request.get("params", {})
+        if not isinstance(params, dict) or set(params) - {"cursor", "_meta"}:
+            return _rpc_error(request_id, -32602, "Invalid params")
+        if "cursor" in params and not isinstance(params["cursor"], str):
+            return _rpc_error(request_id, -32602, "Invalid params")
+        if "_meta" in params and not isinstance(params["_meta"], dict):
+            return _rpc_error(request_id, -32602, "Invalid params")
         return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": TOOLS}}
     if method == "tools/call":
-        if is_notification:
-            return None
         params = request.get("params", {})
-        if not isinstance(params, dict) or set(params) - {"name", "arguments"}:
+        if not isinstance(params, dict) or set(params) - {"name", "arguments", "_meta"}:
             return _rpc_error(request_id, -32602, "Invalid params")
         name = params.get("name")
-        if not isinstance(name, str):
+        if not isinstance(name, str) or (
+            "_meta" in params and not isinstance(params["_meta"], dict)
+        ):
             return _rpc_error(request_id, -32602, "Invalid params")
         try:
             arguments = _require_object(params.get("arguments", {}), "arguments")
@@ -288,7 +549,7 @@ def handle_request(state: State, consumer_id: str, request: Any) -> dict[str, An
         except ContextError as exc:
             result = _tool_result(exc.payload(), is_error=True)
         return {"jsonrpc": "2.0", "id": request_id, "result": result}
-    return None if is_notification else _rpc_error(request_id, -32601, "Method not found")
+    return _rpc_error(request_id, -32601, "Method not found")
 
 
 def build_parser() -> argparse.ArgumentParser:

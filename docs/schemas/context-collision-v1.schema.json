@@ -1,0 +1,14 @@
+{
+  "$id": "https://agentprooflab.github.io/technocore-contribution-agent/schemas/context-collision-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "collision_state": {"enum": ["confirmed", "none_observed", "unknown_due_to_coverage"]},
+    "coverage": {"items": {"type": "object"}, "type": "array"},
+    "matches": {"items": {"type": "object"}, "type": "array"},
+    "schema": {"const": "technocore-context-collision/v1"},
+    "target": {"type": "string"}
+  },
+  "required": ["schema", "target", "collision_state", "matches", "coverage"],
+  "type": "object"
+}

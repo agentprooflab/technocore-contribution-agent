@@ -1,326 +1,567 @@
 {
-  "as_of": "2026-08-27T12:00:00+00:00",
-  "brief_cursor": "brief:v1:2026-08-27T05:09:00+00:00",
-  "budget": {
-    "estimated_used": 1722,
-    "method": "canonical-utf8-div3-v1",
-    "requested": 1800,
-    "scope": "domain_payload_only"
+  "brief": {
+    "as_of": "2026-08-27T12:00:00+00:00",
+    "brief_cursor": "brief:v2:eyJwcm9maWxlX2RpZ2VzdCI6IjlkZjYzYmZhYzA5ZjFmMDBmZGMwMzJmNGJmZjRjMWYwMThjNzY4YWFkNDJiY2MyYzZiN2NmYmVhNzM4Y2ZhZDYiLCJ2ZXJzaW9uIjoyLCJ3YXRlcm1hcmsiOlsiMjAyNi0wOC0yN1QwNTo1OTowMCswMDowMCIsInRlY2hub2NvcmU6Y2hhdDowOjYwIiwiZThiNzVjNmU1YTAyOTQ1OWFkMzY3YmM5YWVjYmM0NjZiZTQyNzM1ZTUyOTk1Y2U3MDZiOTdlOGNiODlhYjUwNyJdfQ",
+    "budget": {
+      "estimated_used": 1738,
+      "method": "canonical-utf8-div3-v1",
+      "requested": 1800,
+      "scope": "domain_payload_only"
+    },
+    "consumer_id": "dashboard-demo",
+    "continuation_cursor": "continue:v1:eyJvZmZzZXQiOjcsInByb2ZpbGVfZGlnZXN0IjoiOWRmNjNiZmFjMDlmMWYwMGZkYzAzMmY0YmZmNGMxZjAxOGM3NjhhYWQ0MmJjYzJjNmI3Y2ZiZWE3MzhjZmFkNiIsInNuYXBzaG90X2RpZ2VzdCI6Ijc1NmNhZWU5YzRkYjUzZWQxNGU1Mjc4MDNmYjk4ZGZkMDU4ZGJlNjM5MTA0YTI1M2UyOWM1NjUxYWMyNDBlOGQiLCJ2ZXJzaW9uIjoxfQ",
+    "coverage": [
+      {
+        "cursor": "240",
+        "epoch": 0,
+        "known_missing": 10,
+        "observed": 230,
+        "pending_fetch": 0,
+        "scope": "chat",
+        "source": "technocore",
+        "status": "partial",
+        "unknown_gap": 0
+      }
+    ],
+    "critical_items_remaining": 23,
+    "items": [
+      {
+        "actor": "2062193216074715136",
+        "content_length": 63,
+        "content_trust": "untrusted",
+        "created_at": "2026-08-27T00:01:00+00:00",
+        "evidence_id": "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
+        "excerpt": "Complete the documented DID-gated task by 2026-08-28T12:00:00Z.",
+        "excerpt_sha256": "0217e534689a52352cf01e584bc4e98060e4c2afe6df9a3c3671410982124ebb",
+        "excerpt_status": "complete",
+        "kind": "official_task",
+        "match_reasons": [
+          "official_task"
+        ],
+        "priority": 100,
+        "related_evidence_count": 1,
+        "source": "x",
+        "source_url": "https://x.com/flop_labs/status/1001"
+      },
+      {
+        "actor": "2062193216074715136",
+        "content_length": 63,
+        "content_trust": "untrusted",
+        "created_at": "2026-08-27T00:02:00+00:00",
+        "evidence_id": "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
+        "excerpt": "Complete the documented DID-gated task by 2026-08-29T12:00:00Z.",
+        "excerpt_sha256": "67d620ea6f7d318467d7bb270df544358402bf848d129ce47e3da7cff928498b",
+        "excerpt_status": "complete",
+        "kind": "official_task",
+        "match_reasons": [
+          "official_task"
+        ],
+        "priority": 100,
+        "related_evidence_count": 1,
+        "source": "x",
+        "source_url": "https://x.com/flop_labs/status/1002"
+      },
+      {
+        "actor": "2062193216074715136",
+        "content_length": 63,
+        "content_trust": "untrusted",
+        "created_at": "2026-08-27T00:03:00+00:00",
+        "evidence_id": "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
+        "excerpt": "Complete the documented DID-gated task by 2026-08-30T12:00:00Z.",
+        "excerpt_sha256": "1f938208734da03a40844a55205a2dc2c0f40a9a3bac3b2c53112b6b0370db8e",
+        "excerpt_status": "complete",
+        "kind": "official_task",
+        "match_reasons": [
+          "official_task"
+        ],
+        "priority": 100,
+        "related_evidence_count": 1,
+        "source": "x",
+        "source_url": "https://x.com/flop_labs/status/1003"
+      },
+      {
+        "actor": "2062193216074715136",
+        "content_length": 77,
+        "content_trust": "untrusted",
+        "created_at": "2026-08-27T00:04:00+00:00",
+        "evidence_id": "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
+        "excerpt": "Testnet task: submit the safe conformance result before 2026-08-28T12:00:00Z.",
+        "excerpt_sha256": "63ecacca74a46c11dd213e62f4c7dea8215cbaae5a0bca00b1052dad77f112b2",
+        "excerpt_status": "complete",
+        "kind": "official_task",
+        "match_reasons": [
+          "official_task"
+        ],
+        "priority": 100,
+        "related_evidence_count": 1,
+        "source": "x",
+        "source_url": "https://x.com/flop_labs/status/1004"
+      },
+      {
+        "actor": "2062193216074715136",
+        "content_length": 77,
+        "content_trust": "untrusted",
+        "created_at": "2026-08-27T00:05:00+00:00",
+        "evidence_id": "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
+        "excerpt": "Testnet task: submit the safe conformance result before 2026-08-29T12:00:00Z.",
+        "excerpt_sha256": "9fc90ec58f96f9360a95c81c3b0cdb595be41bf0382a88524882251726215650",
+        "excerpt_status": "complete",
+        "kind": "official_task",
+        "match_reasons": [
+          "official_task"
+        ],
+        "priority": 100,
+        "related_evidence_count": 1,
+        "source": "x",
+        "source_url": "https://x.com/flop_labs/status/1005"
+      },
+      {
+        "actor": "2062193216074715136",
+        "content_length": 77,
+        "content_trust": "untrusted",
+        "created_at": "2026-08-27T00:06:00+00:00",
+        "evidence_id": "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a",
+        "excerpt": "Testnet task: submit the safe conformance result before 2026-08-30T12:00:00Z.",
+        "excerpt_sha256": "aee8c1379baecef8b6cea24f39934c82ddc9ff6042474c764c463a8bd21b82c8",
+        "excerpt_status": "complete",
+        "kind": "official_task",
+        "match_reasons": [
+          "official_task"
+        ],
+        "priority": 100,
+        "related_evidence_count": 1,
+        "source": "x",
+        "source_url": "https://x.com/flop_labs/status/1006"
+      },
+      {
+        "actor": "2062193216074715136",
+        "content_length": 76,
+        "content_trust": "untrusted",
+        "created_at": "2026-08-27T00:07:00+00:00",
+        "evidence_id": "x:1007@b64078723a9d5bc47da18bdf558e152f8be1a301b04a0d75a4f7ffced903e16e",
+        "excerpt": "Official contribution task positive-007: publish a reproducible test report.",
+        "excerpt_sha256": "aebcfc20ff8bec194a066458b9f90b0a52b6ddf1752a2ae1c67e979520698654",
+        "excerpt_status": "complete",
+        "kind": "official_task",
+        "match_reasons": [
+          "official_task"
+        ],
+        "priority": 100,
+        "related_evidence_count": 1,
+        "source": "x",
+        "source_url": "https://x.com/flop_labs/status/1007"
+      }
+    ],
+    "profile_digest": "9df63bfac09f1f00fdc032f4bff4c1f018c768aad42bcc2c6b7cfbea738cfad6",
+    "schema": "technocore-context-brief/v1",
+    "suppressed": {
+      "acknowledged": 0,
+      "duplicates": 232,
+      "low_relevance": 30,
+      "over_budget": 31,
+      "quarantined": 0
+    }
   },
   "budget_curve": [
     {
       "budget": 300,
       "critical_items_remaining": 30,
-      "error": null,
-      "estimated_used": 230,
-      "evidence_ids": []
+      "error": "BUDGET_TOO_SMALL",
+      "estimated_used": 0,
+      "evidence_ids": [],
+      "over_budget": 30,
+      "payload_sha256": null
     },
     {
       "budget": 350,
       "critical_items_remaining": 30,
-      "error": null,
-      "estimated_used": 230,
-      "evidence_ids": []
+      "error": "BUDGET_TOO_SMALL",
+      "estimated_used": 0,
+      "evidence_ids": [],
+      "over_budget": 30,
+      "payload_sha256": null
     },
     {
       "budget": 400,
       "critical_items_remaining": 30,
-      "error": null,
-      "estimated_used": 230,
-      "evidence_ids": []
+      "error": "BUDGET_TOO_SMALL",
+      "estimated_used": 0,
+      "evidence_ids": [],
+      "over_budget": 30,
+      "payload_sha256": null
     },
     {
       "budget": 450,
       "critical_items_remaining": 30,
-      "error": null,
-      "estimated_used": 230,
-      "evidence_ids": []
+      "error": "BUDGET_TOO_SMALL",
+      "estimated_used": 0,
+      "evidence_ids": [],
+      "over_budget": 30,
+      "payload_sha256": null
     },
     {
       "budget": 500,
       "critical_items_remaining": 30,
-      "error": null,
-      "estimated_used": 230,
-      "evidence_ids": []
+      "error": "BUDGET_TOO_SMALL",
+      "estimated_used": 0,
+      "evidence_ids": [],
+      "over_budget": 30,
+      "payload_sha256": null
     },
     {
       "budget": 550,
       "critical_items_remaining": 30,
-      "error": null,
-      "estimated_used": 319,
-      "evidence_ids": []
+      "error": "BUDGET_TOO_SMALL",
+      "estimated_used": 0,
+      "evidence_ids": [],
+      "over_budget": 30,
+      "payload_sha256": null
     },
     {
       "budget": 600,
       "critical_items_remaining": 29,
       "error": null,
-      "estimated_used": 597,
+      "estimated_used": 599,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b"
-      ]
+      ],
+      "over_budget": 37,
+      "payload_sha256": "ef10d622c64bfb2d8042061d9b2b35c9b01574bd36ea94d18e1f673d1fef309f"
     },
     {
       "budget": 650,
       "critical_items_remaining": 29,
       "error": null,
-      "estimated_used": 597,
+      "estimated_used": 599,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b"
-      ]
+      ],
+      "over_budget": 37,
+      "payload_sha256": "422b398bc405e5d33131e24e0895b5f852533c746472194645657d1b69ad43cc"
     },
     {
       "budget": 700,
       "critical_items_remaining": 29,
       "error": null,
-      "estimated_used": 597,
+      "estimated_used": 599,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b"
-      ]
+      ],
+      "over_budget": 37,
+      "payload_sha256": "0f4900dff246fbef1d0dc42c775ce1a276658dc214295267e203985eb57d214c"
     },
     {
       "budget": 750,
       "critical_items_remaining": 29,
       "error": null,
-      "estimated_used": 597,
+      "estimated_used": 599,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b"
-      ]
+      ],
+      "over_budget": 37,
+      "payload_sha256": "412d2a1771a733d0acef7f13b92488c63512f609f951f522e5fcef49b792b415"
     },
     {
       "budget": 800,
-      "critical_items_remaining": 29,
+      "critical_items_remaining": 28,
       "error": null,
-      "estimated_used": 597,
+      "estimated_used": 786,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b"
-      ]
+        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
+        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
+      ],
+      "over_budget": 36,
+      "payload_sha256": "7fc77d14fce23778a477244a05040e1fb681e3dbd248ae5867894c23ac426be5"
     },
     {
       "budget": 850,
-      "critical_items_remaining": 29,
+      "critical_items_remaining": 28,
       "error": null,
-      "estimated_used": 597,
+      "estimated_used": 786,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b"
-      ]
+        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
+        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
+      ],
+      "over_budget": 36,
+      "payload_sha256": "81bad66545d776ff9023fb7e0c99fb3de34829c14648b50b05fcfbc2dd85f2bf"
     },
     {
       "budget": 900,
       "critical_items_remaining": 28,
       "error": null,
-      "estimated_used": 876,
+      "estimated_used": 786,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
-      ]
+      ],
+      "over_budget": 36,
+      "payload_sha256": "325ff9b56e0894c4843ad44e0d3afca0a57346179ac41e4cf56c7564f0d0b400"
     },
     {
       "budget": 950,
       "critical_items_remaining": 28,
       "error": null,
-      "estimated_used": 876,
+      "estimated_used": 786,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
-      ]
+      ],
+      "over_budget": 36,
+      "payload_sha256": "09eb95913dd8345db65fe7cc67398b9e21bd48999fbc3dc45d23332b076c1d5f"
     },
     {
       "budget": 1000,
-      "critical_items_remaining": 28,
+      "critical_items_remaining": 27,
       "error": null,
-      "estimated_used": 876,
+      "estimated_used": 973,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
-      ]
+        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
+        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
+      ],
+      "over_budget": 35,
+      "payload_sha256": "bb87def0ccc13fc877fa0b5d218a0abb15e76c5e17c5328ccf3aac57944e5be8"
     },
     {
       "budget": 1050,
-      "critical_items_remaining": 28,
+      "critical_items_remaining": 27,
       "error": null,
-      "estimated_used": 876,
+      "estimated_used": 973,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
-      ]
+        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
+        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
+      ],
+      "over_budget": 35,
+      "payload_sha256": "aa301d0a7b6e3e8e1af1d7bb9deabded4b375e8ef923a09533200ae0d3cc0a72"
     },
     {
       "budget": 1100,
-      "critical_items_remaining": 28,
+      "critical_items_remaining": 27,
       "error": null,
-      "estimated_used": 876,
+      "estimated_used": 973,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
-      ]
+        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
+        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
+      ],
+      "over_budget": 35,
+      "payload_sha256": "ca543acc4c5436eac6065166e0e39bb53d9fd1e02e9697aa4876d19e60a1a8a6"
     },
     {
       "budget": 1150,
-      "critical_items_remaining": 28,
+      "critical_items_remaining": 27,
       "error": null,
-      "estimated_used": 876,
+      "estimated_used": 973,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
-      ]
+        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
+        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
+      ],
+      "over_budget": 35,
+      "payload_sha256": "ee9abb2c66a204a22da6563801d487c9150bd04ddc5a93aa06cf21d9d3ac5fb9"
     },
     {
       "budget": 1200,
-      "critical_items_remaining": 27,
+      "critical_items_remaining": 26,
       "error": null,
-      "estimated_used": 1155,
+      "estimated_used": 1164,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
-      ]
+        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
+      ],
+      "over_budget": 34,
+      "payload_sha256": "5953f073192a43217fd1efd8aaca7074815db7f2902bd73728cd5a65b75a9e33"
     },
     {
       "budget": 1250,
-      "critical_items_remaining": 27,
+      "critical_items_remaining": 26,
       "error": null,
-      "estimated_used": 1155,
+      "estimated_used": 1164,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
-      ]
+        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
+      ],
+      "over_budget": 34,
+      "payload_sha256": "b2853f3814fa73ca7a9c3931b8e61093b0d644906a45448dbe5aa7e1471ef7d5"
     },
     {
       "budget": 1300,
-      "critical_items_remaining": 27,
+      "critical_items_remaining": 26,
       "error": null,
-      "estimated_used": 1155,
+      "estimated_used": 1164,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
-      ]
+        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
+      ],
+      "over_budget": 34,
+      "payload_sha256": "5029a5ef98d06ad45be1a757c2c410480f50032447ed04b0857c50d8de966937"
     },
     {
       "budget": 1350,
-      "critical_items_remaining": 27,
+      "critical_items_remaining": 26,
       "error": null,
-      "estimated_used": 1155,
+      "estimated_used": 1164,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
-      ]
+        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
+      ],
+      "over_budget": 34,
+      "payload_sha256": "f4ee7703d3292c2b51c1870b5ac4949d436ac55d121fc17f8ccd99c146c80d12"
     },
     {
       "budget": 1400,
-      "critical_items_remaining": 27,
+      "critical_items_remaining": 25,
       "error": null,
-      "estimated_used": 1155,
+      "estimated_used": 1356,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
-      ]
+        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
+        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539"
+      ],
+      "over_budget": 33,
+      "payload_sha256": "5f236d7640cb7bd773a26879a9d11dfd7838288325a1884bde0e486fb5fdf32f"
     },
     {
       "budget": 1450,
-      "critical_items_remaining": 26,
+      "critical_items_remaining": 25,
       "error": null,
-      "estimated_used": 1439,
+      "estimated_used": 1356,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
         "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
-      ]
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
+        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539"
+      ],
+      "over_budget": 33,
+      "payload_sha256": "2ced77a8daadf25d11d7808b83a3e57ba83a83d1ac5da4ebe7c84b819fc0406b"
     },
     {
       "budget": 1500,
-      "critical_items_remaining": 26,
+      "critical_items_remaining": 25,
       "error": null,
-      "estimated_used": 1439,
+      "estimated_used": 1356,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
         "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
-      ]
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
+        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539"
+      ],
+      "over_budget": 33,
+      "payload_sha256": "922dd9a5d82d39ef2a643eb521e1a486a750c8939daa3cc2538a319dcbd87ffb"
     },
     {
       "budget": 1550,
-      "critical_items_remaining": 26,
+      "critical_items_remaining": 24,
       "error": null,
-      "estimated_used": 1439,
+      "estimated_used": 1547,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
         "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
-      ]
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
+        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
+        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a"
+      ],
+      "over_budget": 32,
+      "payload_sha256": "bea946fef1fb3ede74c01869a8f97c522dd0cbe8023de71a9b30c1ffcb81b482"
     },
     {
       "budget": 1600,
-      "critical_items_remaining": 26,
+      "critical_items_remaining": 24,
       "error": null,
-      "estimated_used": 1439,
+      "estimated_used": 1547,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
         "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
-      ]
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
+        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
+        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a"
+      ],
+      "over_budget": 32,
+      "payload_sha256": "73a4bb870601b4a19f7cdef1c3e0520c1b0712b663cca1850eb2c265659372b5"
     },
     {
       "budget": 1650,
-      "critical_items_remaining": 26,
+      "critical_items_remaining": 24,
       "error": null,
-      "estimated_used": 1439,
+      "estimated_used": 1547,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
         "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
-      ]
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
+        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
+        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a"
+      ],
+      "over_budget": 32,
+      "payload_sha256": "c601bbb7a35fdc0a77cea813a102f563998da32313eea63d170fc03d8145ba37"
     },
     {
       "budget": 1700,
-      "critical_items_remaining": 26,
+      "critical_items_remaining": 24,
       "error": null,
-      "estimated_used": 1439,
+      "estimated_used": 1547,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
         "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
-      ]
+        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
+        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
+        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a"
+      ],
+      "over_budget": 32,
+      "payload_sha256": "c3b91d1f1fc2f3fb13beb8a5ab2677536cc8fcb29267462be8d91d602d8d8f39"
     },
     {
       "budget": 1750,
-      "critical_items_remaining": 25,
+      "critical_items_remaining": 23,
       "error": null,
-      "estimated_used": 1722,
+      "estimated_used": 1738,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
         "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
         "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539"
-      ]
+        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
+        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a",
+        "x:1007@b64078723a9d5bc47da18bdf558e152f8be1a301b04a0d75a4f7ffced903e16e"
+      ],
+      "over_budget": 31,
+      "payload_sha256": "2d1d43c446368f193df213634aec1e55089041001dc9dce9e4057f8cf237e685"
     },
     {
       "budget": 1800,
-      "critical_items_remaining": 25,
+      "critical_items_remaining": 23,
       "error": null,
-      "estimated_used": 1722,
+      "estimated_used": 1738,
       "evidence_ids": [
         "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
         "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
         "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
         "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539"
-      ]
+        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
+        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a",
+        "x:1007@b64078723a9d5bc47da18bdf558e152f8be1a301b04a0d75a4f7ffced903e16e"
+      ],
+      "over_budget": 31,
+      "payload_sha256": "a6a2f64f5951bb0603deec958c631c2eee1d6b9ebd1c80d1fdf2031b1f6b5d2d"
     }
   ],
-  "consumer_id": "dashboard-demo",
-  "continuation_cursor": "continue:v1:eyJvZmZzZXQiOjUsInByb2ZpbGVfZGlnZXN0IjoiOWRmNjNiZmFjMDlmMWYwMGZkYzAzMmY0YmZmNGMxZjAxOGM3NjhhYWQ0MmJjYzJjNmI3Y2ZiZWE3MzhjZmFkNiIsInNuYXBzaG90X2RpZ2VzdCI6Ijc1NmNhZWU5YzRkYjUzZWQxNGU1Mjc4MDNmYjk4ZGZkMDU4ZGJlNjM5MTA0YTI1M2UyOWM1NjUxYWMyNDBlOGQiLCJ2ZXJzaW9uIjoxfQ",
-  "coverage": [
+  "coverage_details": [
     {
       "cursor": "240",
       "epoch": 0,
@@ -350,127 +591,18 @@
       "unknown_gap": 0
     }
   ],
-  "critical_items_remaining": 25,
-  "items": [
-    {
-      "actor": "2062193216074715136",
-      "content_length": 63,
-      "content_sha256": "0217e534689a52352cf01e584bc4e98060e4c2afe6df9a3c3671410982124ebb",
-      "content_trust": "untrusted",
-      "created_at": "2026-08-27T00:01:00+00:00",
-      "event_id": "x:1001",
-      "evidence_id": "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-      "excerpt": "Complete the documented DID-gated task by 2026-08-28T12:00:00Z.",
-      "excerpt_sha256": "0217e534689a52352cf01e584bc4e98060e4c2afe6df9a3c3671410982124ebb",
-      "excerpt_status": "complete",
-      "expand_ref": "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-      "kind": "official_task",
-      "match_reasons": [
-        "official_task"
-      ],
-      "priority": 100,
-      "related_evidence_count": 1,
-      "revision_digest": "431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-      "source": "x",
-      "source_url": "https://x.com/flop_labs/status/1001"
-    },
-    {
-      "actor": "2062193216074715136",
-      "content_length": 63,
-      "content_sha256": "67d620ea6f7d318467d7bb270df544358402bf848d129ce47e3da7cff928498b",
-      "content_trust": "untrusted",
-      "created_at": "2026-08-27T00:02:00+00:00",
-      "event_id": "x:1002",
-      "evidence_id": "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-      "excerpt": "Complete the documented DID-gated task by 2026-08-29T12:00:00Z.",
-      "excerpt_sha256": "67d620ea6f7d318467d7bb270df544358402bf848d129ce47e3da7cff928498b",
-      "excerpt_status": "complete",
-      "expand_ref": "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-      "kind": "official_task",
-      "match_reasons": [
-        "official_task"
-      ],
-      "priority": 100,
-      "related_evidence_count": 1,
-      "revision_digest": "45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-      "source": "x",
-      "source_url": "https://x.com/flop_labs/status/1002"
-    },
-    {
-      "actor": "2062193216074715136",
-      "content_length": 63,
-      "content_sha256": "1f938208734da03a40844a55205a2dc2c0f40a9a3bac3b2c53112b6b0370db8e",
-      "content_trust": "untrusted",
-      "created_at": "2026-08-27T00:03:00+00:00",
-      "event_id": "x:1003",
-      "evidence_id": "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-      "excerpt": "Complete the documented DID-gated task by 2026-08-30T12:00:00Z.",
-      "excerpt_sha256": "1f938208734da03a40844a55205a2dc2c0f40a9a3bac3b2c53112b6b0370db8e",
-      "excerpt_status": "complete",
-      "expand_ref": "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-      "kind": "official_task",
-      "match_reasons": [
-        "official_task"
-      ],
-      "priority": 100,
-      "related_evidence_count": 1,
-      "revision_digest": "0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-      "source": "x",
-      "source_url": "https://x.com/flop_labs/status/1003"
-    },
-    {
-      "actor": "2062193216074715136",
-      "content_length": 77,
-      "content_sha256": "63ecacca74a46c11dd213e62f4c7dea8215cbaae5a0bca00b1052dad77f112b2",
-      "content_trust": "untrusted",
-      "created_at": "2026-08-27T00:04:00+00:00",
-      "event_id": "x:1004",
-      "evidence_id": "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-      "excerpt": "Testnet task: submit the safe conformance result before 2026-08-28T12:00:00Z.",
-      "excerpt_sha256": "63ecacca74a46c11dd213e62f4c7dea8215cbaae5a0bca00b1052dad77f112b2",
-      "excerpt_status": "complete",
-      "expand_ref": "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-      "kind": "official_task",
-      "match_reasons": [
-        "official_task"
-      ],
-      "priority": 100,
-      "related_evidence_count": 1,
-      "revision_digest": "05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-      "source": "x",
-      "source_url": "https://x.com/flop_labs/status/1004"
-    },
-    {
-      "actor": "2062193216074715136",
-      "content_length": 77,
-      "content_sha256": "9fc90ec58f96f9360a95c81c3b0cdb595be41bf0382a88524882251726215650",
-      "content_trust": "untrusted",
-      "created_at": "2026-08-27T00:05:00+00:00",
-      "event_id": "x:1005",
-      "evidence_id": "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
-      "excerpt": "Testnet task: submit the safe conformance result before 2026-08-29T12:00:00Z.",
-      "excerpt_sha256": "9fc90ec58f96f9360a95c81c3b0cdb595be41bf0382a88524882251726215650",
-      "excerpt_status": "complete",
-      "expand_ref": "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
-      "kind": "official_task",
-      "match_reasons": [
-        "official_task"
-      ],
-      "priority": 100,
-      "related_evidence_count": 1,
-      "revision_digest": "1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
-      "source": "x",
-      "source_url": "https://x.com/flop_labs/status/1005"
-    }
-  ],
-  "profile_digest": "9df63bfac09f1f00fdc032f4bff4c1f018c768aad42bcc2c6b7cfbea738cfad6",
-  "schema": "technocore-context-brief/v1",
-  "snapshot_kind": "synthetic_repetition_stress_fixture",
-  "suppressed": {
-    "acknowledged": 0,
-    "duplicates": 232,
-    "low_relevance": 30,
-    "over_budget": 33,
-    "quarantined": 0
-  }
+  "generated_at": "2026-08-27T12:00:00+00:00",
+  "metrics": {
+    "baseline_name": "minimal-raw-observation-v1",
+    "compiled_budget_units": 12888,
+    "official_false_positives": 0,
+    "official_positive_cases": 30,
+    "official_recall": "30/30",
+    "page_budget_units": 800,
+    "page_count": 17,
+    "raw_budget_units": 27968,
+    "reduction_basis_points": 5392
+  },
+  "schema": "technocore-dashboard-envelope/v1",
+  "snapshot_kind": "synthetic_repetition_stress_fixture"
 }

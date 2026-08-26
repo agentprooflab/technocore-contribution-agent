@@ -3,6 +3,8 @@ set -eu
 
 runtime_root="__RUNTIME_ROOT__"
 state_root="$HOME/.local/share/tca"
+export PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
+export GH_CONFIG_DIR="$HOME/.config/gh-agentproof"
 mkdir -p "$state_root/logs"
 cd "$runtime_root"
 

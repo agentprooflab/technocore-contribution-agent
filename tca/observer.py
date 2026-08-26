@@ -78,11 +78,11 @@ def _x_observations(config: Config) -> list[dict[str, Any]]:
     since = (datetime.now(UTC) - timedelta(days=3)).date().isoformat()
     items: list[dict[str, Any]] = []
     for account in config.official_x:
-        posts = _run_json(
+        bird_command = ["bird", "--cookie-source", "chrome"]
+        if config.identity.x_chrome_profile:
+            bird_command.extend(["--chrome-profile", config.identity.x_chrome_profile])
+        bird_command.extend(
             [
-                "bird",
-                "--cookie-source",
-                "chrome",
                 "search",
                 f"from:{account.username} since:{since}",
                 "-n",
@@ -90,6 +90,7 @@ def _x_observations(config: Config) -> list[dict[str, Any]]:
                 "--json",
             ]
         )
+        posts = _run_json(bird_command)
         for post in posts:
             author = post.get("author") or {}
             author_id = str(post.get("authorId", ""))

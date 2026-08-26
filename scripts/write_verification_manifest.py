@@ -29,6 +29,10 @@ def manifest(paths: list[Path]) -> list[dict[str, str]]:
         {"path": str(path.relative_to(ROOT)), "sha256": sha256(path)}
         for path in sorted(paths)
         if path.is_file()
+        and "__pycache__" not in path.parts
+        and path.suffix != ".pyc"
+        and path.name != ".gitignore"
+        and path.name not in {"verification-manifest.json", "sbom.spdx.json"}
     ]
 
 

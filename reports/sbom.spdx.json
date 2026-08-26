@@ -1,0 +1,23 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://agentprooflab.invalid/spdx/db6b83f32111a4895a8c8af3487e2b4c99f2d704fd502c195b0717241de98d71",
+  "name": "technocore-contribution-agent-0.2.0",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-TCA",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "MIT",
+      "name": "technocore-contribution-agent",
+      "versionInfo": "0.2.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-Cryptography",
+      "downloadLocation": "NOASSERTION",
+      "licenseConcluded": "NOASSERTION",
+      "name": "cryptography",
+      "versionInfo": "50.0.1"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}

@@ -9,7 +9,9 @@ difficult-to-fake usefulness rather than identity count or message volume.
 
 ## Safety model
 
-- The first 48 hours are read-only. Identity creation and every external write are blocked.
+- A configurable read-only shadow gate blocks identity creation and external writes until the
+  operator explicitly completes or waives it. This deployment's initial gate was waived only after
+  successful observation and account isolation checks.
 - The private Ed25519 seed lives only in macOS Keychain. GitHub Actions never receives it.
 - Official X instructions are trusted only when both handle and numeric account ID match the
   allowlist in `config/targets.toml`.
@@ -19,7 +21,7 @@ difficult-to-fake usefulness rather than identity count or message volume.
 - Wallet activity, token purchases, contract addresses, fund transfers, identity multiplication,
   and private-key language are blocked from outbound text.
 
-## Install and start the shadow period
+## Install and start observation
 
 ```bash
 uv sync --frozen
@@ -28,9 +30,9 @@ uv run tca rank
 uv run tca status
 ```
 
-`observe` starts the 48-hour clock on first use. It reads GitHub, allowlisted X timelines, and the
-configured Technocore rooms. The state database defaults to `~/.local/share/tca/state.db` and is
-never committed.
+`observe` starts any configured shadow clock on first use. It reads GitHub, allowlisted X timelines,
+and the configured Technocore rooms. The state database defaults to
+`~/.local/share/tca/state.db` and is never committed.
 
 GitHub Actions runs GitHub-only observation every 30 minutes with read-only repository permission.
 For local ten-minute monitoring, review and run `scripts/install-launchd.sh --approve`; the installer
@@ -40,7 +42,7 @@ Re-run the installer after upgrading the project.
 
 ## Identity gate
 
-Do not create another public `awesome-technocore` list. During the shadow period:
+Do not create another public `awesome-technocore` list. Before identity initialization:
 
 1. Create the approved pseudonymous GitHub organization and X identity.
 2. Put their public names in `config/targets.toml`.
@@ -49,7 +51,7 @@ Do not create another public `awesome-technocore` list. During the shadow period
 4. Log the pseudonymous X account into a separate Chrome profile and put that profile name in
    `x_chrome_profile`; pin the account's numeric ID in `x_user_id`.
 5. Keep GitHub organization membership private if the platform permits it.
-6. Wait until `tca status` reports `shadow_complete: true`.
+6. Confirm `tca status` reports `shadow_complete: true`.
 
 Example isolated GitHub authentication after the account exists:
 

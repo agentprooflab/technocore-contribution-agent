@@ -10,7 +10,8 @@ x_chrome_profile = "Profile 11"
 [observer]
 state_dir = "~/.local/share/tca"
 technocore_base_url = "https://technocore.chat"
-shadow_hours = 48
+# Explicitly waived by the operator after successful read-only observation and account isolation.
+shadow_hours = 0
 rooms = ["technocore", "chat", "did-key-method"]
 github_interval_minutes = 30
 local_interval_minutes = 10

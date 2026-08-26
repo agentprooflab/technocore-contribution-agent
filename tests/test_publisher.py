@@ -14,7 +14,7 @@ def test_publication_is_blocked_during_shadow(tmp_path) -> None:
     config = load_config(project / "config" / "targets.toml")
     config = replace(
         config,
-        observer=replace(config.observer, state_dir=tmp_path),
+        observer=replace(config.observer, state_dir=tmp_path, shadow_hours=48),
         identity=replace(
             config.identity,
             github_account="pseudonymous-org",

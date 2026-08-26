@@ -47,7 +47,7 @@ Do not create another public `awesome-technocore` list. During the shadow period
 3. Authenticate the pseudonymous GitHub user with an isolated `GH_CONFIG_DIR`; never switch the
    default `gh` session used by your personal account.
 4. Log the pseudonymous X account into a separate Chrome profile and put that profile name in
-   `x_chrome_profile`.
+   `x_chrome_profile`; pin the account's numeric ID in `x_user_id`.
 5. Keep GitHub organization membership private if the platform permits it.
 6. Wait until `tca status` reports `shadow_complete: true`.
 
@@ -59,7 +59,8 @@ GH_CONFIG_DIR="$HOME/.config/gh-agentproof" gh auth status
 ```
 
 The publisher always supplies this isolated configuration directory to `gh` and the configured
-dedicated Chrome profile to `bird`. It will not fall back to the machine's personal sessions.
+dedicated Chrome profile to `bird`. Before posting, it requires both the expected handle and numeric
+account ID. It will not fall back to the machine's personal sessions.
 
 Then create exactly one DID:
 

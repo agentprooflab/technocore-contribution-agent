@@ -12,6 +12,7 @@ class IdentityConfig:
     keychain_account: str
     github_account: str
     x_account: str
+    x_user_id: str
     github_cli_config_dir: str
     x_chrome_profile: str
 

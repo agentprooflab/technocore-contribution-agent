@@ -151,6 +151,7 @@ def main(argv: list[str] | None = None) -> None:
                     "x_binding_configured": bool(config.identity.x_account),
                     "isolated_github_cli_configured": bool(config.identity.github_cli_config_dir),
                     "isolated_x_profile_configured": bool(config.identity.x_chrome_profile),
+                    "x_numeric_identity_configured": bool(config.identity.x_user_id),
                     "last_observe_at": state.get_meta("last_observe_at"),
                     "counts": state.counts(),
                 }

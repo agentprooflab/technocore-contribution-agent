@@ -153,6 +153,23 @@ def _x_post(config: Config, action: dict[str, Any]) -> str:
     if not shutil.which("bird"):
         raise RuntimeError("bird CLI is unavailable")
     require_safe_outbound(action["text"])
+    identity_output = _run(
+        [
+            "bird",
+            "--plain",
+            "--no-color",
+            "--cookie-source",
+            "chrome",
+            "--chrome-profile",
+            config.identity.x_chrome_profile,
+            "whoami",
+        ]
+    )
+    expected_handle = f"@{config.identity.x_account}"
+    if expected_handle.lower() not in identity_output.lower():
+        raise RuntimeError("configured Chrome profile is signed into the wrong X account")
+    if config.identity.x_user_id not in identity_output:
+        raise RuntimeError("configured Chrome profile returned an unexpected X numeric account ID")
     output = _run(
         [
             "bird",
@@ -230,7 +247,11 @@ def publish_bundle(
         raise RuntimeError(
             "configure the approved pseudonymous GitHub and X account bindings first"
         )
-    if not config.identity.github_cli_config_dir or not config.identity.x_chrome_profile:
+    if (
+        not config.identity.github_cli_config_dir
+        or not config.identity.x_chrome_profile
+        or not config.identity.x_user_id
+    ):
         raise RuntimeError("configure isolated GitHub CLI and Chrome profile credentials first")
     bundle_row = state.bundle(bundle_id)
     bundle_path = Path(bundle_row["path"])

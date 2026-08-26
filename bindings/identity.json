@@ -1,0 +1,9 @@
+{
+  "did": "did:key:z6MkgFmDGf3TrafoG176qMnRtBscxq3trn8pYvJsvQXopRAF",
+  "github_account": "agentprooflab",
+  "published_at": "2026-08-26T12:50:09.718587+00:00",
+  "schema": "technocore-account-binding/v1",
+  "signature": "sW_HDsnTlVofckn95K3pG26FEKO5pV6V5oLG6_Oh_AUP0v5ITNT02_lk515yZSC1YGPg1Z_QIDpk1AIN7xA4Cg",
+  "statement": "voluntary key-control evidence; not personhood or reward eligibility",
+  "x_account": "agentprooflab"
+}

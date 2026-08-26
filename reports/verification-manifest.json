@@ -1,5 +1,5 @@
 {
-  "artifact_manifest_sha256": "b625cad4095d71408e1a59982c41bae694c1b34bdd901fa5db3b3af82ed1a28f",
+  "artifact_manifest_sha256": "6dc7a71b4cd45690845c59baaff6c95749320c09e4ac64c70dd36057d723f0c1",
   "artifacts": [
     {
       "path": ".github/workflows/ci.yml",
@@ -18,28 +18,40 @@
       "sha256": "f83acfcf4676c0a25fce48fb053bde9f0a22299691924be6973329bfc629d95d"
     },
     {
+      "path": "assets/agentproof-avatar.png",
+      "sha256": "58949dcff02001aed0fceade72dd648084db1a11fc1ac7f1958c1f2a265ae0c3"
+    },
+    {
+      "path": "assets/signal-noise-hero-v1.jpg",
+      "sha256": "4e2eca4a5c7a618f079252dfcbd860f43f9945c2e6afd822c248e1e25c6768c7"
+    },
+    {
       "path": "config/targets.toml",
       "sha256": "112590c3d7896544a06d9c8cc79784f4cdddaeb42d9cfbb3bc75c6ef2fdd1dc7"
     },
     {
       "path": "dist/SHA256SUMS",
-      "sha256": "2fa5f462a19f7f373de37bc5b4506ebf44dae5d3c2e1a188f746698d889da3bd"
+      "sha256": "eb3de1901b12a142a01719d324d75c0fc86bc4d9b1be65914fb42e498c6e4756"
     },
     {
       "path": "dist/technocore_contribution_agent-0.2.0-py3-none-any.whl",
-      "sha256": "37cfe782afcc401d65a893714a7764d46cde0a64c4935c0b2f511ddf7c67f3c2"
+      "sha256": "c8b482acdef1453f137ddf8c3d5b4c97cd3974223843b3ee1e02e66fb0ca312c"
     },
     {
       "path": "dist/technocore_contribution_agent-0.2.0.tar.gz",
-      "sha256": "a5cf2ce3b79e6685c01b3355f3d41c9f163ab0917e2df420b286dd143924e83f"
+      "sha256": "b6fe829a78eaf1f7cb4ab757af9a273e5b92c34bc6bb8ccbbe3b1eefe3e22a9e"
     },
     {
       "path": "docs/app.css",
-      "sha256": "ebdd1601eb44cfa2545e3c6f619a953a31f75a93e7d737294afdae059393938a"
+      "sha256": "5aa59e4b3478532d71c863a093a3110f0898ff990580ff50a0a8ca44079b557a"
     },
     {
       "path": "docs/app.js",
-      "sha256": "0ce9165d3b7519a3cadfd3c72cccb97c62e448d4375e9eef43d91f0577188d10"
+      "sha256": "ee66b07169ac4db6d3fc6b525e36c71c26229ff342c48b2d5e12dde793180f7a"
+    },
+    {
+      "path": "docs/assets/signal-noise-hero-v1.jpg",
+      "sha256": "4e2eca4a5c7a618f079252dfcbd860f43f9945c2e6afd822c248e1e25c6768c7"
     },
     {
       "path": "docs/context-broker.md",
@@ -47,7 +59,7 @@
     },
     {
       "path": "docs/index.html",
-      "sha256": "ca0a6fe4021db7267fb48b1ce0f7274e21270f338bede3c2c959a290f6fcaf22"
+      "sha256": "7346a7883f549339b5319ad3afe290420c7249787e1a3fb91bf43b2fe4fd3e95"
     },
     {
       "path": "docs/schemas/context-acknowledgment-v1.schema.json",
@@ -175,7 +187,7 @@
     },
     {
       "path": "scripts/write_verification_manifest.py",
-      "sha256": "a1035167c872381cf53928d893bc7b3565b6071e2a60ba44a06e1350b58b5cbf"
+      "sha256": "1d48f75c944d86695da376a7970bce3b402b30f2f8977080c63ffead53dc1fbe"
     },
     {
       "path": "tca/__init__.py",
@@ -235,7 +247,7 @@
     },
     {
       "path": "tca/site.py",
-      "sha256": "80ab9db4d225c630a490ac9466a7ca4f5791a1a3c0578c151210f17b9f11a22f"
+      "sha256": "6e97168bfbde276fdaca9f42f1d4f3f286f3a3b336e52f5c827dc46ffeb4ab88"
     },
     {
       "path": "tca/state.py",
@@ -259,7 +271,7 @@
     },
     {
       "path": "verification/run.py",
-      "sha256": "5db7fdca697849453151650b99be934f291c47a8bdb4a41d2cc5a48ea1a5a73a"
+      "sha256": "373fbd3da22bb03e7ec35cb5dcd95b0a5d8af8da666a054f7e29ae648f592660"
     },
     {
       "path": "verification/runtime_probe.py",
@@ -267,14 +279,14 @@
     },
     {
       "path": "verification/slice-1.json",
-      "sha256": "208b539452f37038d7b16f6245df9a0b4820020a2e92903a6eeff2ea69c1001c"
+      "sha256": "5b80b497d4487c807ef9f2c934ac52cc035566d24bfc82f2a4fcc351abc324c6"
     },
     {
       "path": "verification/slices.yaml",
       "sha256": "0499d2f6a1d823f824b06c2781e0f3d58e556c2db8283fbcbf2147cc22de05a0"
     }
   ],
-  "commit_sha": "e2f79282cfb6952beeed909778f816181e890a9e",
+  "commit_sha": "f1e069a2f7527645500869fef0be3a35cd65a457",
   "dirty_worktree": false,
   "environment": {
     "implementation": "CPython",
@@ -291,5 +303,5 @@
   "schema": "technocore-brief-verification-manifest/v1",
   "signature": null,
   "signature_note": "The AgentProof DID signature is added only after local review and explicit approval; CI never receives the key.",
-  "tree_sha": "115a07510004ec8af046f5f82a764e111800063d"
+  "tree_sha": "58c0bd57a1b1fb25f70f62a39667136bc2cc3003"
 }

@@ -76,7 +76,7 @@ not claim to be indexer-neutral yet.
 
 GitHub Actions runs GitHub-only observation every 30 minutes with read-only repository permission.
 For local ten-minute monitoring, review and run `scripts/install-launchd.sh --approve`; the installer
-copies a non-editable runtime and public configuration to `~/.local/share/tca/runtime-0.1.0`, then
+copies a non-editable runtime and public configuration to `~/.local/share/tca/runtime-0.2.0`, then
 registers the observer. The runtime copy avoids granting a background process access to Documents.
 Re-run the installer after upgrading the project.
 

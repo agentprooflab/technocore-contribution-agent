@@ -10,7 +10,7 @@ project_root="$(cd "$(dirname "$0")/.." && pwd)"
 template="$project_root/launchd/com.technocore.tca.observer.plist.template"
 destination="$HOME/Library/LaunchAgents/com.technocore.tca.observer.plist"
 uv_bin="$(command -v uv)"
-runtime_root="$HOME/.local/share/tca/runtime-0.1.0"
+runtime_root="$HOME/.local/share/tca/runtime-0.2.0"
 runtime_script_template="$project_root/launchd/runtime-observe.sh.template"
 mkdir -p "$HOME/Library/LaunchAgents" "$HOME/.local/share/tca/logs" \
   "$runtime_root/config"

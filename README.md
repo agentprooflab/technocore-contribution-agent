@@ -206,5 +206,9 @@ negative official false positives, 78.50% context reduction, and 60% amortized r
 the declared five-room/five-consumer request model. These are not population-wide reliability or
 token-saving claims.
 
+Run the non-mutating full gate with `./scripts/verify.sh`. `./scripts/verify-release.sh` additionally
+builds the wheel and source distribution, installs the wheel into an empty home, exercises MCP, and
+records release hashes and the SBOM.
+
 The observer and tests are safe to run during shadow mode. `publish`, `identity init`, and
 `identity publish-note` are deliberately unavailable until their gates pass.

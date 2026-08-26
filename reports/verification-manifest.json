@@ -1,6 +1,14 @@
 {
-  "artifact_manifest_sha256": "00d9b642e98e6f467fa4878c31c4ae6ab500c7e2aec257b188e71f36b7e9271f",
+  "artifact_manifest_sha256": "3fdab8f3a041be6bc78779f6640aac1553aa1b50b6c18e3dd47de7b814b2871d",
   "artifacts": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "3505b20b3a53dfb64ce9c7205287530d2261cdfecaee0c1aee37e50710e13949"
+    },
+    {
+      "path": ".github/workflows/observe.yml",
+      "sha256": "e2ae23570d0432e0dda87ee294425063e7283e63dd87e267d79ea679ff56c554"
+    },
     {
       "path": "LICENSE",
       "sha256": "415039020278b18feaa9ceb04fd086a7700b5d66f5ef66f3c9148406c8b5bf97"
@@ -15,15 +23,15 @@
     },
     {
       "path": "dist/SHA256SUMS",
-      "sha256": "344f0437bab2efb7ebcb1441a748b2c4e6240f6f564bacbf969ae070013c91be"
+      "sha256": "2fa5f462a19f7f373de37bc5b4506ebf44dae5d3c2e1a188f746698d889da3bd"
     },
     {
       "path": "dist/technocore_contribution_agent-0.2.0-py3-none-any.whl",
-      "sha256": "9cfc90c5cfbf822d38381e2aed63b58800982961cb5684b37df4a4e27c3ed65b"
+      "sha256": "37cfe782afcc401d65a893714a7764d46cde0a64c4935c0b2f511ddf7c67f3c2"
     },
     {
       "path": "dist/technocore_contribution_agent-0.2.0.tar.gz",
-      "sha256": "9931c662210d8a106e32a9e310d1b65052e6ea675725e600e963c616dc3cd0c7"
+      "sha256": "a5cf2ce3b79e6685c01b3355f3d41c9f163ab0917e2df420b286dd143924e83f"
     },
     {
       "path": "docs/app.css",
@@ -167,7 +175,7 @@
     },
     {
       "path": "scripts/write_verification_manifest.py",
-      "sha256": "3f27b3f412324d254381222f93550bffc47e4fc0c640cf156ed420053fdcc90b"
+      "sha256": "a1035167c872381cf53928d893bc7b3565b6071e2a60ba44a06e1350b58b5cbf"
     },
     {
       "path": "tca/__init__.py",
@@ -251,22 +259,22 @@
     },
     {
       "path": "verification/run.py",
-      "sha256": "00b44a5251c2e5d271697bf35fcb4daa7760329e0f77e91e55b8f29d82310db7"
+      "sha256": "5db7fdca697849453151650b99be934f291c47a8bdb4a41d2cc5a48ea1a5a73a"
     },
     {
       "path": "verification/runtime_probe.py",
-      "sha256": "b65f9b46f67b7ba67d5bca2040cd04fb14dff2304e01186d31d7f69e4e0c0fd4"
+      "sha256": "d630c53dd6d4521ac157ee6c07b32e731058c4617bc8855e31eeba39965e17dc"
     },
     {
       "path": "verification/slice-1.json",
-      "sha256": "b838692cd7e39ef5d445b0986ded963ccfc2820ff6f0ead7341f5d0f21a4f32b"
+      "sha256": "d459d868ed8b4d33290f06cb89a16f82a15faf317f0958cb55df406d97168b03"
     },
     {
       "path": "verification/slices.yaml",
       "sha256": "0499d2f6a1d823f824b06c2781e0f3d58e556c2db8283fbcbf2147cc22de05a0"
     }
   ],
-  "commit_sha": "475b11bd86a21710385f22878048a6ed2b7d3f95",
+  "commit_sha": "d248172cba3eb6ec22190358c10271c6820b1c2d",
   "dirty_worktree": false,
   "environment": {
     "implementation": "CPython",
@@ -283,5 +291,5 @@
   "schema": "technocore-brief-verification-manifest/v1",
   "signature": null,
   "signature_note": "The AgentProof DID signature is added only after local review and explicit approval; CI never receives the key.",
-  "tree_sha": "70779c7042ed393d0d8c57af890c6aaafc405bea"
+  "tree_sha": "1b6bbcfb167f98c6060d9797b404787f2dd25dc0"
 }

@@ -1,0 +1,25 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install uv
+        run: python3 -m pip install --user uv
+      - name: Sync locked dependencies
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Test
+        run: uv run pytest
+      - name: Verify evidence history is current
+        run: uv run tca site --check
+

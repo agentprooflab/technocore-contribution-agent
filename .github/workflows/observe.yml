@@ -1,0 +1,35 @@
+name: read-only-observer
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TCA_STATE: ${{ runner.temp }}/tca/state.db
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install uv
+        run: python3 -m pip install --user uv
+      - name: Sync locked dependencies
+        run: uv sync --frozen
+      - name: Observe GitHub read-only
+        run: uv run tca observe --github-only
+      - name: Rank candidates
+        run: uv run tca rank
+      - name: Report status
+        run: uv run tca status
+      - name: Preserve read-only state snapshot
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tca-observer-${{ github.run_id }}
+          path: ${{ runner.temp }}/tca/state.db
+          retention-days: 7
+

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.technocore.tca.observer</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>__RUNTIME_ROOT__/observe.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__RUNTIME_ROOT__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>TCA_CONFIG</key>
+    <string>__RUNTIME_ROOT__/config/targets.toml</string>
+    <key>TCA_STATE</key>
+    <string>__HOME__/.local/share/tca/state.db</string>
+  </dict>
+  <key>StartInterval</key>
+  <integer>600</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>__HOME__/.local/share/tca/logs/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/.local/share/tca/logs/launchd.err.log</string>
+</dict>
+</plist>

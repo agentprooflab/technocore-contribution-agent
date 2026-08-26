@@ -1,0 +1,34 @@
+[identity]
+keychain_service = "tca.identity"
+keychain_account = "builder-v1"
+github_account = ""
+x_account = ""
+
+[observer]
+state_dir = "~/.local/share/tca"
+technocore_base_url = "https://technocore.chat"
+shadow_hours = 48
+rooms = ["technocore", "chat", "did-key-method"]
+github_interval_minutes = 30
+local_interval_minutes = 10
+
+[github]
+upstream_repo = "flop-labs/technocore-chat"
+maintainer_logins = ["sv"]
+awesome_fallback = "zunmax/awesome-technocore"
+max_open_upstream_prs = 1
+max_ordinary_batches_per_week = 2
+
+[[official_x]]
+username = "flop_labs"
+user_id = "2062193216074715136"
+
+[[official_x]]
+username = "CryptoHayes"
+user_id = "983993370048630785"
+
+[publishing]
+technocore_room = "technocore"
+evidence_dir = "evidence"
+site_dir = "docs"
+

@@ -1,0 +1,14 @@
+#!/bin/zsh
+set -eu
+
+runtime_root="__RUNTIME_ROOT__"
+state_root="$HOME/.local/share/tca"
+mkdir -p "$state_root/logs"
+cd "$runtime_root"
+
+{
+  printf '%s observe start\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  "$runtime_root/.venv/bin/tca" observe
+  "$runtime_root/.venv/bin/tca" rank
+  "$runtime_root/.venv/bin/tca" status
+} >>"$state_root/logs/observer.log" 2>&1

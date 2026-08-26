@@ -42,10 +42,12 @@ def test_prepare_creates_digest_locked_bundle(tmp_path) -> None:
         PrepareOptions(
             kind="testnet_task",
             artifact_url="https://github.com/example/repo",
+            technocore_room="chat",
             technocore_text="Completed a reproducible testnet task with public evidence.",
         ),
     )
     bundle = json.loads(Path(result["path"]).read_text())
     assert bundle["candidate"]["priority"] == 100
+    assert bundle["actions"][0]["room"] == "chat"
     assert bundle["security"]["requires_batch_approval"] is True
     assert state.bundle(result["id"])["sha256"] == result["sha256"]

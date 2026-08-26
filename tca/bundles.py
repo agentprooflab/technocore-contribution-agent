@@ -20,6 +20,7 @@ class PrepareOptions:
     commit_sha: str | None = None
     test_command: str | None = None
     workdir: Path | None = None
+    technocore_room: str | None = None
     technocore_text: str | None = None
     x_text: str | None = None
     github_repo: str | None = None
@@ -107,7 +108,7 @@ def prepare(
         actions.append(
             {
                 "type": "technocore",
-                "room": config.publishing.technocore_room,
+                "room": options.technocore_room or config.publishing.technocore_room,
                 "text": options.technocore_text,
             }
         )

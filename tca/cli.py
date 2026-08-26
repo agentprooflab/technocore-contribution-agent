@@ -64,6 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     prepare_parser.add_argument("--commit-sha")
     prepare_parser.add_argument("--test-command")
     prepare_parser.add_argument("--workdir", type=Path)
+    prepare_parser.add_argument("--technocore-room")
     prepare_parser.add_argument("--technocore-text")
     prepare_parser.add_argument("--x-text")
     prepare_parser.add_argument("--github-repo")
@@ -111,6 +112,7 @@ def main(argv: list[str] | None = None) -> None:
                 commit_sha=args.commit_sha,
                 test_command=args.test_command,
                 workdir=args.workdir,
+                technocore_room=args.technocore_room,
                 technocore_text=args.technocore_text,
                 x_text=args.x_text,
                 github_repo=args.github_repo,

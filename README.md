@@ -107,6 +107,7 @@ uv run tca prepare cand-EXAMPLE \
   --commit-sha FULL_COMMIT_SHA \
   --test-command 'uv run pytest -q' \
   --workdir /absolute/path/to/project \
+  --technocore-room technocore \
   --technocore-text 'Completed the documented task; method, tests, and limitations are at ARTIFACT_URL.' \
   --x-text 'Published a reproducible Technocore contribution with tests and signed evidence: ARTIFACT_URL'
 ```

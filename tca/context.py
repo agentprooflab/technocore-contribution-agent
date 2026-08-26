@@ -9,12 +9,17 @@ from collections import defaultdict
 from datetime import UTC, datetime
 from typing import Any
 
+from tca.ranking import pull_request_blocks_issue
 from tca.state import State, canonical_json, iso_now, sha256_text
 
 BRIEF_SCHEMA = "technocore-context-brief/v1"
 EXPANSION_SCHEMA = "technocore-context-expansion/v1"
 ERROR_SCHEMA = "technocore-context-error/v1"
 BUDGET_METHOD = "canonical-utf8-div3-v1"
+MAX_BUDGET_UNITS = 100_000
+MAX_EVIDENCE_IDS = 50
+MAX_EVIDENCE_ID_LENGTH = 512
+MAX_CURSOR_LENGTH = 2048
 CONSUMER_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]{0,63}$")
 REF_RE = re.compile(r"^(?P<observation>.+)@(?P<digest>[0-9a-f]{64})$")
 
@@ -61,6 +66,18 @@ def _with_budget_used(payload: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def _required_budget(payload: dict[str, Any]) -> int:
+    """Return the fixed-point budget that can carry this complete payload."""
+    required = 1
+    while True:
+        trial = json.loads(canonical_json(payload))
+        trial["budget"]["requested"] = required
+        measured = _with_budget_used(trial)["budget"]["estimated_used"]
+        if measured == required:
+            return required
+        required = measured
+
+
 def _validate_consumer(consumer_id: str) -> str:
     normalized = consumer_id.strip().lower()
     if not CONSUMER_RE.fullmatch(normalized):
@@ -71,10 +88,35 @@ def _validate_consumer(consumer_id: str) -> str:
     return normalized
 
 
-def _normalized_interests(interests: list[str] | tuple[str, ...] | None) -> tuple[str, ...]:
+def _validate_budget(requested_budget: int) -> int:
+    if isinstance(requested_budget, bool) or not isinstance(requested_budget, int):
+        raise ContextError("INVALID_BUDGET", "budget must be an integer")
+    if not 1 <= requested_budget <= MAX_BUDGET_UNITS:
+        raise ContextError(
+            "INVALID_BUDGET",
+            f"budget must be between 1 and {MAX_BUDGET_UNITS}",
+        )
+    return requested_budget
+
+
+def _normalized_interests(
+    interests: list[str] | tuple[str, ...] | None,
+    *,
+    max_items: int = 32,
+    max_length: int = 80,
+    label: str = "interests",
+) -> tuple[str, ...]:
+    if interests is not None and (
+        not isinstance(interests, (list, tuple))
+        or not all(isinstance(value, str) for value in interests)
+    ):
+        raise ContextError("INVALID_INTERESTS", f"{label} must be a string array")
     values = {value.strip().lower() for value in interests or () if value.strip()}
-    if any(len(value) > 80 for value in values) or len(values) > 32:
-        raise ContextError("INVALID_INTERESTS", "at most 32 interests of 80 characters are allowed")
+    if any(len(value) > max_length for value in values) or len(values) > max_items:
+        raise ContextError(
+            "INVALID_INTERESTS",
+            f"at most {max_items} {label} of {max_length} characters are allowed",
+        )
     return tuple(sorted(values))
 
 
@@ -126,7 +168,7 @@ def coverage_report(
             continue
         grouped[(str(row["source"]), str(row["scope"]), int(row["epoch"]))].append(row)
     cursors = {
-        (str(row["source"]), str(row["scope"])): row
+        (str(row["source"]), str(row["scope"]), int(row["epoch"])): row
         for row in state.cursors()
         if not public_only or row["exposure_class"] == "public"
     }
@@ -146,10 +188,9 @@ def coverage_report(
                     "state": str(row["state"]),
                 }
             )
-        cursor = cursors.get((source, scope))
-        cursor_state = str(cursor["state"]) if cursor else "unknown"
-        if cursor_state != "active":
-            status = cursor_state
+        cursor = cursors.get((source, scope, epoch))
+        if cursor and cursor["state"] != "active":
+            status = str(cursor["state"])
         elif counts["unknown_gap"] or counts["confirmed_lost"]:
             status = "partial"
         elif counts["pending_fetch"]:
@@ -172,14 +213,17 @@ def coverage_report(
                 **({"ranges": ranges} if include_ranges else {}),
             }
         )
-    for (source, scope), cursor in sorted(cursors.items()):
-        if any(report["source"] == source and report["scope"] == scope for report in reports):
+    for (source, scope, epoch), cursor in sorted(cursors.items()):
+        if any(
+            report["source"] == source and report["scope"] == scope and report["epoch"] == epoch
+            for report in reports
+        ):
             continue
         reports.append(
             {
                 "source": source,
                 "scope": scope,
-                "epoch": int(cursor["epoch"]),
+                "epoch": epoch,
                 "status": str(cursor["state"]),
                 "cursor": str(cursor["cursor"]) if cursor["cursor"] else None,
                 "known_missing": 0,
@@ -194,15 +238,13 @@ def coverage_report(
 
 def _attention_item(row: Any, priority: int, reasons: list[str]) -> dict[str, Any]:
     body = str(row["body"])
-    withheld = row["source"] == "technocore"
+    withheld = not bool(row["authoritative"])
     excerpt = (
-        "[untrusted Technocore content withheld; expand explicitly]" if withheld else _excerpt(body)
+        "[untrusted source content withheld; expand explicitly]" if withheld else _excerpt(body)
     )
     evidence_id = f"{row['id']}@{row['revision_digest']}"
     return {
-        "event_id": str(row["id"]),
         "evidence_id": evidence_id,
-        "revision_digest": str(row["revision_digest"]),
         "source": str(row["source"]),
         "kind": str(row["kind"]),
         "priority": priority,
@@ -215,9 +257,7 @@ def _attention_item(row: Any, priority: int, reasons: list[str]) -> dict[str, An
         ),
         "content_length": len(body),
         "excerpt_sha256": sha256_text(excerpt),
-        "content_sha256": sha256_text(body),
         "content_trust": "untrusted",
-        "expand_ref": evidence_id,
         "actor": str(row["actor_id"]) if row["actor_id"] else None,
         "created_at": str(row["created_at"]) if row["created_at"] else None,
         "source_url": str(row["url"]) if row["url"] else None,
@@ -241,6 +281,10 @@ def _continuation_cursor(offset: int, snapshot_digest: str, profile_digest: str)
 def _parse_continuation(value: str | None, *, snapshot_digest: str, profile_digest: str) -> int:
     if not value:
         return 0
+    if not isinstance(value, str):
+        raise ContextError("INVALID_CURSOR", "continuation cursor must be a string")
+    if len(value) > MAX_CURSOR_LENGTH:
+        raise ContextError("INVALID_CURSOR", "continuation cursor is too long")
     if not value.startswith("continue:v1:"):
         raise ContextError("CURSOR_VERSION_UNSUPPORTED", "unsupported continuation cursor")
     token = value.removeprefix("continue:v1:")
@@ -249,6 +293,8 @@ def _parse_continuation(value: str | None, *, snapshot_digest: str, profile_dige
         payload = json.loads(base64.urlsafe_b64decode(token + padding))
     except (ValueError, json.JSONDecodeError) as exc:
         raise ContextError("INVALID_CURSOR", "invalid continuation cursor") from exc
+    if not isinstance(payload, dict):
+        raise ContextError("INVALID_CURSOR", "invalid continuation cursor")
     if payload.get("version") != 1:
         raise ContextError("CURSOR_VERSION_UNSUPPORTED", "unsupported continuation cursor")
     if payload.get("profile_digest") != profile_digest:
@@ -261,6 +307,71 @@ def _parse_continuation(value: str | None, *, snapshot_digest: str, profile_dige
     return offset
 
 
+def _canonical_observed_at(value: Any) -> str:
+    text = str(value or "")
+    if not text:
+        return ""
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return text
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC).isoformat()
+
+
+def _observation_watermark(row: Any) -> tuple[str, str, str]:
+    return (
+        _canonical_observed_at(row["observed_at"]),
+        str(row["id"]),
+        str(row["revision_digest"]),
+    )
+
+
+def _brief_cursor(watermark: tuple[str, str, str], profile_digest: str) -> str:
+    encoded = base64.urlsafe_b64encode(
+        canonical_json(
+            {
+                "profile_digest": profile_digest,
+                "version": 2,
+                "watermark": list(watermark),
+            }
+        ).encode("utf-8")
+    ).decode("ascii")
+    return "brief:v2:" + encoded.rstrip("=")
+
+
+def _parse_brief_cursor(value: str | None, *, profile_digest: str) -> tuple[str, str, str]:
+    if not value:
+        return ("", "", "")
+    if not isinstance(value, str):
+        raise ContextError("INVALID_CURSOR", "brief cursor must be a string")
+    if len(value) > MAX_CURSOR_LENGTH:
+        raise ContextError("INVALID_CURSOR", "brief cursor is too long")
+    if not value.startswith("brief:v2:"):
+        raise ContextError("CURSOR_VERSION_UNSUPPORTED", "unsupported brief cursor")
+    token = value.removeprefix("brief:v2:")
+    try:
+        padding = "=" * (-len(token) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(token + padding))
+    except (ValueError, json.JSONDecodeError) as exc:
+        raise ContextError("INVALID_CURSOR", "invalid brief cursor") from exc
+    if not isinstance(payload, dict):
+        raise ContextError("INVALID_CURSOR", "invalid brief cursor")
+    if payload.get("version") != 2:
+        raise ContextError("CURSOR_VERSION_UNSUPPORTED", "unsupported brief cursor")
+    if payload.get("profile_digest") != profile_digest:
+        raise ContextError("CURSOR_PROFILE_MISMATCH", "cursor belongs to a different profile")
+    watermark = payload.get("watermark")
+    if (
+        not isinstance(watermark, list)
+        or len(watermark) != 3
+        or not all(isinstance(item, str) for item in watermark)
+    ):
+        raise ContextError("INVALID_CURSOR", "brief cursor watermark is invalid")
+    return watermark[0], watermark[1], watermark[2]
+
+
 def build_brief(
     state: State,
     *,
@@ -270,16 +381,22 @@ def build_brief(
     requested_budget: int = 800,
     as_of: str | None = None,
     continuation: str | None = None,
+    since: str | None = None,
     public_only: bool = True,
 ) -> dict[str, Any]:
-    if requested_budget < 1:
-        raise ContextError("INVALID_BUDGET", "budget must be a positive integer")
+    requested_budget = _validate_budget(requested_budget)
     consumer = _validate_consumer(consumer_id)
     profile = _normalized_interests(interests)
-    markers = _normalized_interests(mention_markers)
+    markers = _normalized_interests(
+        mention_markers,
+        max_items=16,
+        max_length=160,
+        label="mention markers",
+    )
     profile_digest = sha256_text(
         canonical_json({"consumer": consumer, "interests": profile, "mention_markers": markers})
     )
+    since_watermark = _parse_brief_cursor(since, profile_digest=profile_digest)
     acknowledgments = state.acknowledgments(consumer)
     suppressed = {
         "acknowledged": 0,
@@ -290,7 +407,12 @@ def build_brief(
     }
     grouped: dict[str, list[tuple[Any, int, list[str]]]] = defaultdict(list)
     observations = state.current_observations(public_only=public_only)
+    target_watermark = since_watermark
     for row in observations:
+        row_watermark = _observation_watermark(row)
+        target_watermark = max(target_watermark, row_watermark)
+        if row_watermark <= since_watermark:
+            continue
         if row["quarantine_reason"]:
             suppressed["quarantined"] += 1
             continue
@@ -298,15 +420,15 @@ def build_brief(
         if priority == 0 or (profile and priority < 40):
             suppressed["low_relevance"] += 1
             continue
+        key = (str(row["id"]), str(row["revision_digest"]))
+        if key in acknowledgments:
+            suppressed["acknowledged"] += 1
+            continue
         content_digest = sha256_text(str(row["body"]).strip().lower())
         grouped[content_digest].append((row, priority, reasons))
 
-    candidates: list[tuple[dict[str, Any], str, list[tuple[str, str]]]] = []
+    candidates: list[tuple[dict[str, Any], str]] = []
     for group in grouped.values():
-        keys = [(str(row["id"]), str(row["revision_digest"])) for row, _, _ in group]
-        if any(key in acknowledgments for key in keys):
-            suppressed["acknowledged"] += len(group)
-            continue
         representative, priority, reasons = sorted(
             group,
             key=lambda item: (
@@ -320,7 +442,7 @@ def build_brief(
         suppressed["duplicates"] += len(group) - 1
         item = _attention_item(representative, priority, reasons)
         item["related_evidence_count"] = len(group)
-        candidates.append((item, str(representative["observed_at"]), keys))
+        candidates.append((item, str(representative["observed_at"])))
     candidates.sort(
         key=lambda candidate: (
             -int(candidate[0]["priority"]),
@@ -330,12 +452,13 @@ def build_brief(
         )
     )
     if as_of is not None:
+        if not isinstance(as_of, str):
+            raise ContextError("INVALID_AS_OF", "as_of must be an RFC 3339 timestamp")
         try:
             datetime.fromisoformat(as_of.replace("Z", "+00:00"))
         except ValueError as exc:
             raise ContextError("INVALID_AS_OF", "as_of must be an RFC 3339 timestamp") from exc
     now = as_of or iso_now()
-    watermark = max((observed_at for _, observed_at, _ in candidates), default=now)
     snapshot_digest = sha256_text(
         canonical_json([candidate[0]["evidence_id"] for candidate in candidates])
     )
@@ -352,7 +475,7 @@ def build_brief(
         "as_of": now,
         "consumer_id": consumer,
         "profile_digest": profile_digest,
-        "brief_cursor": f"brief:v1:{watermark}",
+        "brief_cursor": _brief_cursor(target_watermark, profile_digest),
         "budget": {
             "requested": requested_budget,
             "estimated_used": 0,
@@ -372,44 +495,66 @@ def build_brief(
             "budget cannot hold the minimum schema-valid brief",
             details={"required_units": minimum["budget"]["estimated_used"]},
         )
-    selected: list[dict[str, Any]] = []
-    consumed = 0
-    for item, _, _ in candidates:
-        trial = {**base, "items": [*selected, item]}
-        if _with_budget_used(trial)["budget"]["estimated_used"] <= requested_budget:
-            selected.append(item)
-            consumed += 1
-        else:
-            break
-    remaining = candidates[consumed:]
-    suppressed["over_budget"] += len(remaining)
-    omitted_critical = sum(1 for item, _, _ in remaining if int(item["priority"]) == 100)
-    next_cursor = (
-        _continuation_cursor(offset + consumed, snapshot_digest, profile_digest)
-        if remaining and consumed
-        else None
-    )
-    result = {
-        **base,
-        "items": selected,
-        "critical_items_remaining": omitted_critical,
-        "continuation_cursor": next_cursor,
-    }
-    result["suppressed"] = suppressed
-    result = _with_budget_used(result)
-    while result["budget"]["estimated_used"] > requested_budget and result["items"]:
-        removed = result["items"].pop()
-        result["suppressed"]["over_budget"] += 1
-        if removed["priority"] == 100:
-            result["critical_items_remaining"] += 1
-        result["continuation_cursor"] = _continuation_cursor(
-            offset + len(result["items"]), snapshot_digest, profile_digest
+
+    def page(
+        selected_count: int,
+        *,
+        reported_budget: int = requested_budget,
+    ) -> dict[str, Any]:
+        remaining = candidates[selected_count:]
+        page_suppressed = {**suppressed, "over_budget": len(remaining)}
+        return _with_budget_used(
+            {
+                **base,
+                "budget": {**base["budget"], "requested": reported_budget},
+                "items": [item for item, _ in candidates[:selected_count]],
+                "critical_items_remaining": sum(
+                    1 for item, _ in remaining if int(item["priority"]) == 100
+                ),
+                "continuation_cursor": (
+                    _continuation_cursor(
+                        offset + selected_count,
+                        snapshot_digest,
+                        profile_digest,
+                    )
+                    if remaining
+                    else None
+                ),
+                "suppressed": page_suppressed,
+            }
         )
-        result = _with_budget_used(result)
+
+    selected_count = 0
+    result = page(0)
+    for count in range(1, len(candidates) + 1):
+        trial = page(count)
+        if trial["budget"]["estimated_used"] > requested_budget:
+            break
+        selected_count = count
+        result = trial
+    if candidates and selected_count == 0:
+        required = page(1, reported_budget=1)["budget"]["estimated_used"]
+        while True:
+            exact = page(1, reported_budget=required)["budget"]["estimated_used"]
+            if exact == required:
+                break
+            required = exact
+        raise ContextError(
+            "BUDGET_TOO_SMALL",
+            "budget cannot make progress on the next attention item",
+            details={
+                "required_units": required,
+                "evidence_id": candidates[0][0]["evidence_id"],
+            },
+        )
     return result
 
 
 def parse_evidence_ref(value: str) -> tuple[str, str]:
+    if not isinstance(value, str):
+        raise ContextError("INVALID_EVIDENCE_ID", "evidence id must be a string")
+    if len(value) > MAX_EVIDENCE_ID_LENGTH:
+        raise ContextError("INVALID_EVIDENCE_ID", "evidence id is too long")
     match = REF_RE.fullmatch(value)
     if not match:
         raise ContextError("INVALID_EVIDENCE_ID", "evidence id must be observation@sha256")
@@ -424,8 +569,23 @@ def expand_observations(
     public_only: bool = True,
     as_of: str | None = None,
 ) -> dict[str, Any]:
-    if not evidence_ids or len(evidence_ids) > 50:
-        raise ContextError("INVALID_EVIDENCE_IDS", "provide between 1 and 50 evidence ids")
+    if (
+        not isinstance(evidence_ids, (list, tuple))
+        or not evidence_ids
+        or len(evidence_ids) > MAX_EVIDENCE_IDS
+        or not all(isinstance(value, str) for value in evidence_ids)
+    ):
+        raise ContextError(
+            "INVALID_EVIDENCE_IDS",
+            f"provide between 1 and {MAX_EVIDENCE_IDS} evidence ids",
+        )
+    if as_of is not None:
+        if not isinstance(as_of, str):
+            raise ContextError("INVALID_AS_OF", "as_of must be an RFC 3339 timestamp")
+        try:
+            datetime.fromisoformat(as_of.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise ContextError("INVALID_AS_OF", "as_of must be an RFC 3339 timestamp") from exc
     unique = list(dict.fromkeys(evidence_ids))
     base = {
         "schema": EXPANSION_SCHEMA,
@@ -438,17 +598,21 @@ def expand_observations(
         },
         "items": [],
     }
-    if requested_budget < 1:
-        raise ContextError("INVALID_BUDGET", "budget must be a positive integer")
+    requested_budget = _validate_budget(requested_budget)
+    base["budget"]["requested"] = requested_budget
+    resolved: list[dict[str, Any] | None] = []
+    stubs: list[dict[str, Any]] = []
     for reference in unique:
         observation_id, digest = parse_evidence_ref(reference)
         try:
             revision = state.observation_revision(observation_id, digest)
         except KeyError:
-            base["items"].append({"evidence_id": reference, "status": "unknown"})
+            resolved.append(None)
+            stubs.append({"evidence_id": reference, "status": "unknown"})
             continue
         if public_only and revision["exposure_class"] != "public":
-            base["items"].append({"evidence_id": reference, "status": "restricted"})
+            resolved.append(None)
+            stubs.append({"evidence_id": reference, "status": "restricted"})
             continue
         material = json.loads(revision["material_json"])
         content = str(material["body"])
@@ -464,32 +628,68 @@ def expand_observations(
             "created_at": material.get("created_at"),
             "source_url": material.get("url"),
         }
-        trial = {**base, "items": [*base["items"], full]}
-        if _with_budget_used(trial)["budget"]["estimated_used"] <= requested_budget:
-            base["items"].append(full)
-        else:
-            complete_units = _with_budget_used(trial)["budget"]["estimated_used"]
-            metadata = {
+        resolved.append(full)
+        stubs.append(
+            {
                 "evidence_id": reference,
                 "status": "omitted_budget",
                 "content_sha256": sha256_text(content),
-                "required_units": complete_units,
+                "required_units": 0,
             }
-            base["items"].append(metadata)
-    result = _with_budget_used(base)
-    if result["budget"]["estimated_used"] > requested_budget:
+        )
+
+    # Per-item retry hints are complete-response budgets, not isolated item sizes. Iterate because
+    # the digit width of one hint can change the complete payload size used to calculate another.
+    while True:
+        changed = False
+        for index, full in enumerate(resolved):
+            if full is None:
+                continue
+            trial_items = list(stubs)
+            trial_items[index] = full
+            required = _required_budget({**base, "items": trial_items})
+            if stubs[index]["required_units"] != required:
+                stubs[index]["required_units"] = required
+                changed = True
+        if not changed:
+            break
+
+    base["items"] = stubs
+    minimum = _with_budget_used(base)
+    if minimum["budget"]["estimated_used"] > requested_budget:
+        required = _required_budget(base)
         raise ContextError(
             "BUDGET_TOO_SMALL",
             "budget cannot hold expansion metadata",
-            details={"required_units": result["budget"]["estimated_used"]},
+            details={"required_units": required},
         )
-    return result
+
+    items = list(stubs)
+    for index, full in enumerate(resolved):
+        if full is None:
+            continue
+        trial_items = list(items)
+        trial_items[index] = full
+        trial = _with_budget_used({**base, "items": trial_items})
+        if trial["budget"]["estimated_used"] <= requested_budget:
+            items = trial_items
+    return _with_budget_used({**base, "items": items})
 
 
 def acknowledge_observations(
     state: State, consumer_id: str, evidence_ids: list[str]
 ) -> dict[str, Any]:
     consumer = _validate_consumer(consumer_id)
+    if (
+        not isinstance(evidence_ids, (list, tuple))
+        or not evidence_ids
+        or len(evidence_ids) > MAX_EVIDENCE_IDS
+        or not all(isinstance(value, str) for value in evidence_ids)
+    ):
+        raise ContextError(
+            "INVALID_EVIDENCE_IDS",
+            f"provide between 1 and {MAX_EVIDENCE_IDS} evidence ids",
+        )
     parsed = [parse_evidence_ref(value) for value in list(dict.fromkeys(evidence_ids))]
     count = state.acknowledge(consumer, parsed)
     return {
@@ -514,7 +714,7 @@ def check_collisions(state: State, target: str) -> dict[str, Any]:
             re.I,
         )
         for candidate in observations:
-            if candidate["kind"] != "pull_request" or candidate["id"] == row["id"]:
+            if candidate["id"] == row["id"] or not pull_request_blocks_issue(candidate):
                 continue
             if pattern.search(f"{candidate['title']}\n{candidate['body']}"):
                 matches.append(

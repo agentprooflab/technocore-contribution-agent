@@ -25,6 +25,23 @@ TECHNICAL_WORDS = (
 )
 
 
+def pull_request_blocks_issue(row: Any) -> bool:
+    if row["kind"] != "pull_request":
+        return False
+    try:
+        raw = json.loads(row["raw_json"])
+    except (KeyError, TypeError, json.JSONDecodeError):
+        return True
+    if not isinstance(raw, dict):
+        return True
+    source_state = raw.get("state") or raw.get("source_state")
+    if source_state != "closed":
+        return True
+    pull_request = raw.get("pull_request") or {}
+    merged_at = pull_request.get("merged_at") if isinstance(pull_request, dict) else None
+    return bool(raw.get("merged_at") or merged_at)
+
+
 def _collision_for_issue(state: State, issue_number: str) -> bool:
     pattern = re.compile(
         rf"(?:fix(?:es)?|close(?:s)?|resolve(?:s)?)?\s*#{re.escape(issue_number)}\b",
@@ -32,9 +49,12 @@ def _collision_for_issue(state: State, issue_number: str) -> bool:
     )
     with state.connect() as connection:
         rows = connection.execute(
-            "SELECT title, body FROM observations WHERE kind = 'pull_request'"
+            "SELECT kind, title, body, raw_json FROM observations WHERE kind = 'pull_request'"
         ).fetchall()
-    return any(pattern.search(f"{row['title']}\n{row['body']}") for row in rows)
+    return any(
+        pull_request_blocks_issue(row) and pattern.search(f"{row['title']}\n{row['body']}")
+        for row in rows
+    )
 
 
 def _duplicate_body_count(state: State, body: str) -> int:

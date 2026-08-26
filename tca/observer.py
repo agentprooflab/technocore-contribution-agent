@@ -200,13 +200,35 @@ def _observe_technocore(config: Config, state: State) -> int:
         cursor_row = state.source_cursor("technocore", room)
         cursor = str(cursor_row["cursor"]) if cursor_row and cursor_row["cursor"] else None
         epoch = int(cursor_row["epoch"]) if cursor_row else 0
+        exposure_class = (
+            "restricted" if room.startswith(("p-", "mb-", "e-p-", "mb-p-")) else "public"
+        )
+        tail_params = {
+            "format": "json",
+            "limit": 1,
+            "n": str(cursor_row["updated_at"]) if cursor_row else iso_now(),
+        }
         if cursor_row and cursor_row["state"] == "epoch_ambiguous":
-            continue
+            if cursor is None:
+                continue
+            confirmation = _get_json(
+                f"{config.observer.technocore_base_url}/r/{room}?{urlencode(tail_params)}"
+            )
+            confirmed_tail = int(confirmation.get("last_seq") or 0)
+            if confirmed_tail >= int(cursor):
+                continue
+            epoch = state.recover_ambiguous_epoch(
+                source="technocore",
+                scope=room,
+                expected_epoch=epoch,
+                expected_cursor=cursor,
+                exposure_class=exposure_class,
+            )
+            cursor = None
         params: dict[str, Any] = {"format": "json", "limit": 200}
         if cursor is not None:
             tail = _get_json(
-                f"{config.observer.technocore_base_url}/r/{room}?"
-                f"{urlencode({'format': 'json', 'limit': 1})}"
+                f"{config.observer.technocore_base_url}/r/{room}?{urlencode(tail_params)}"
             )
             actual_tail = int(tail.get("last_seq") or 0)
             if actual_tail < int(cursor):
@@ -219,11 +241,7 @@ def _observe_technocore(config: Config, state: State) -> int:
                     coverage_ranges=[],
                     next_cursor=cursor,
                     cursor_state="epoch_ambiguous",
-                    exposure_class=(
-                        "restricted"
-                        if room.startswith(("p-", "mb-", "e-p-", "mb-p-"))
-                        else "public"
-                    ),
+                    exposure_class=exposure_class,
                 )
                 continue
             params["since"] = cursor
@@ -242,6 +260,7 @@ def _observe_technocore(config: Config, state: State) -> int:
                 coverage_ranges=[],
                 next_cursor=cursor,
                 cursor_state="epoch_ambiguous",
+                exposure_class=exposure_class,
             )
             continue
 
@@ -266,9 +285,7 @@ def _observe_technocore(config: Config, state: State) -> int:
             observations=items,
             coverage_ranges=coverage,
             next_cursor=next_cursor,
-            exposure_class=(
-                "restricted" if room.startswith(("p-", "mb-", "e-p-", "mb-p-")) else "public"
-            ),
+            exposure_class=exposure_class,
         )
     return inserted
 

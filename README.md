@@ -47,10 +47,14 @@ uv run tca coverage
 uv run tca collisions OBSERVATION_ID
 ```
 
-`brief` returns exact bounded excerpts, observable match reasons, precise revision identifiers, and
-coverage. `expand` returns exact stored content and continues to label it untrusted. Acknowledgment
-is local, consumer-scoped, and revision-scoped; an edited source resurfaces. Collision detection is
-exact-only in 0.2 and reports uncertainty when relevant coverage is incomplete.
+`brief` returns observable match reasons, precise revision identifiers, coverage, and bounded
+excerpts only for authenticated official records. Other source text stays withheld until an agent
+explicitly calls `expand`, which returns exact stored content while continuing to label it
+untrusted. Use a page's `continuation_cursor` to finish one immutable snapshot. After the final
+page, pass its `brief_cursor` back with `--since` (or MCP's `since` argument) to receive only newer
+revisions. Acknowledgment is local, consumer-scoped, and revision-scoped; an edited source
+resurfaces. Collision detection is exact-only in 0.2 and reports uncertainty when relevant coverage
+is incomplete.
 
 Run the read-only stdio MCP server with:
 

@@ -4,6 +4,7 @@ from pathlib import Path
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
+from evals.run_context_eval import evaluate
 from tca.context import ContextError, build_brief, expand_observations
 from tca.state import State
 
@@ -55,3 +56,15 @@ def test_brief_expansion_and_error_validate_against_public_schemas(tmp_path) -> 
     validate("context-expansion-v1.schema.json", expansion)
     error = ContextError("TEST", "test").payload()
     validate("context-error-v1.schema.json", error)
+
+
+def test_dashboard_envelope_and_nested_brief_validate() -> None:
+    _report, dashboard = evaluate()
+    validate("context-dashboard-v1.schema.json", dashboard)
+    validate("context-brief-v1.schema.json", dashboard["brief"])
+
+
+def test_public_docs_publish_exact_schema_bytes() -> None:
+    for source in sorted((ROOT / "schemas").glob("*.json")):
+        published = ROOT / "docs" / "schemas" / source.name
+        assert published.read_bytes() == source.read_bytes()

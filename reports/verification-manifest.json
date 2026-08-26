@@ -1,9 +1,9 @@
 {
-  "artifact_manifest_sha256": "3fdab8f3a041be6bc78779f6640aac1553aa1b50b6c18e3dd47de7b814b2871d",
+  "artifact_manifest_sha256": "b625cad4095d71408e1a59982c41bae694c1b34bdd901fa5db3b3af82ed1a28f",
   "artifacts": [
     {
       "path": ".github/workflows/ci.yml",
-      "sha256": "3505b20b3a53dfb64ce9c7205287530d2261cdfecaee0c1aee37e50710e13949"
+      "sha256": "559521aba1487673413b3ffac999463b2d88e374b79101ada63c5448dc7d2715"
     },
     {
       "path": ".github/workflows/observe.yml",
@@ -267,14 +267,14 @@
     },
     {
       "path": "verification/slice-1.json",
-      "sha256": "d459d868ed8b4d33290f06cb89a16f82a15faf317f0958cb55df406d97168b03"
+      "sha256": "208b539452f37038d7b16f6245df9a0b4820020a2e92903a6eeff2ea69c1001c"
     },
     {
       "path": "verification/slices.yaml",
       "sha256": "0499d2f6a1d823f824b06c2781e0f3d58e556c2db8283fbcbf2147cc22de05a0"
     }
   ],
-  "commit_sha": "d248172cba3eb6ec22190358c10271c6820b1c2d",
+  "commit_sha": "e2f79282cfb6952beeed909778f816181e890a9e",
   "dirty_worktree": false,
   "environment": {
     "implementation": "CPython",
@@ -291,5 +291,5 @@
   "schema": "technocore-brief-verification-manifest/v1",
   "signature": null,
   "signature_note": "The AgentProof DID signature is added only after local review and explicit approval; CI never receives the key.",
-  "tree_sha": "1b6bbcfb167f98c6060d9797b404787f2dd25dc0"
+  "tree_sha": "115a07510004ec8af046f5f82a764e111800063d"
 }

@@ -15,7 +15,7 @@ from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
 from tca.config import Config
-from tca.evidence import SCHEMA, sign_record, write_record
+from tca.evidence import SCHEMA, load_record, sign_record, write_record
 from tca.identity import Identity, did_note_location
 from tca.safety import require_safe_outbound
 from tca.site import build_site
@@ -131,7 +131,7 @@ def _technocore_message(
     did, signature, swept = identity.sign_message(room, nonce, text)
     url = (
         f"{config.observer.technocore_base_url}/r/{quote(room)}/say-signed/"
-        f"{quote(did, safe=':')}/{quote(signature)}/{nonce}/{quote(swept, safe='')}"
+        f"{quote(did, safe=':')}/{quote(signature)}/{nonce}/{quote(swept, safe='')}?format=json"
     )
     request = Request(url, headers={"User-Agent": "tca/0.1"})
     try:
@@ -147,15 +147,13 @@ def _technocore_message(
                 "signed write outcome is unknown and no receipt is visible; manual review required"
             ) from exc
         return receipt
-    match = re.search(r"\bseq(?:uence)?[=:\s]+(\d+)\b", body, re.I)
-    if match:
-        return {
-            "room": room,
-            "seq": int(match.group(1)),
-            "nonce": nonce,
-            "from": did,
-            "text": swept,
-        }
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError:
+        payload = {}
+    posted = payload.get("posted")
+    if isinstance(posted, dict) and posted.get("seq") is not None:
+        return {**posted, "room": room}
     receipt = _find_receipt(config.observer.technocore_base_url, room, did, nonce)
     if receipt is None:
         raise RuntimeError(f"write returned success but no parseable receipt: {body[:300]}")
@@ -203,6 +201,32 @@ def _x_post(config: Config, action: dict[str, Any]) -> str:
 def _monday_utc(now: datetime) -> datetime:
     midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
     return midnight - timedelta(days=midnight.weekday())
+
+
+def _require_live_technocore_source(config: Config, bundle: dict[str, Any]) -> None:
+    candidate = bundle["candidate"]
+    if candidate.get("source") != "technocore":
+        return
+    external_id = candidate.get("external_id")
+    actor_id = candidate.get("actor_id")
+    if not isinstance(external_id, str) or ":" not in external_id:
+        raise RuntimeError("Technocore candidate is missing a room and sequence")
+    room, sequence_text = external_id.rsplit(":", 1)
+    if not sequence_text.isdigit():
+        raise RuntimeError("Technocore candidate sequence is invalid")
+    sequence = int(sequence_text)
+    live = next(
+        (
+            message
+            for message in _read_room(config.observer.technocore_base_url, room)
+            if int(message.get("seq", -1)) == sequence
+        ),
+        None,
+    )
+    if live is None:
+        raise RuntimeError("source Technocore message is no longer in the live room window")
+    if live.get("from") != actor_id or live.get("text") != candidate.get("body"):
+        raise RuntimeError("source Technocore message no longer matches the approved candidate")
 
 
 def _enforce_publication_budget(config: Config, state: State, bundle: dict[str, Any]) -> None:
@@ -277,6 +301,7 @@ def publish_bundle(
     if not any(action["type"] == "technocore" for action in bundle["actions"]):
         raise RuntimeError("a contribution batch must include a signed Technocore evidence message")
     _enforce_publication_budget(config, state, bundle)
+    _require_live_technocore_source(config, bundle)
     state.set_bundle_status(bundle_id, "approved")
 
     results: dict[str, Any] = {}
@@ -390,3 +415,48 @@ def publish_identity_note(config: Config, state: State, identity: Identity, appr
         f"{config.observer.technocore_base_url}/kv/{namespace}/{key}",
     )
     return body
+
+
+def reconcile_bundle_receipt(
+    config: Config, state: State, identity: Identity, bundle_id: str
+) -> dict[str, Any]:
+    bundle_row = state.bundle(bundle_id)
+    bundle = json.loads(Path(bundle_row["path"]).read_text())
+    action = next((item for item in bundle["actions"] if item["type"] == "technocore"), None)
+    if action is None:
+        raise RuntimeError("bundle has no Technocore action")
+    action_key = _action_key(action)
+    stored = state.action(bundle_id, "technocore", action_key)
+    if stored is None or not stored["external_url"]:
+        raise RuntimeError("bundle has no stored Technocore receipt")
+    nonce_match = re.search(r"[?&]nonce=([0-9]+)$", str(stored["external_url"]))
+    if not nonce_match:
+        raise RuntimeError("stored Technocore receipt has no parseable nonce")
+    nonce = int(nonce_match.group(1))
+    receipt = _find_receipt(
+        config.observer.technocore_base_url, action["room"], identity.did(), nonce
+    )
+    if receipt is None:
+        raise RuntimeError("the signed message is no longer in the live room window")
+    corrected_url = (
+        f"{config.observer.technocore_base_url}/humans#r/{action['room']}/"
+        f"{receipt['seq']}?nonce={receipt['nonce']}"
+    )
+    state.set_action(bundle_id, "technocore", action_key, "success", external_url=corrected_url)
+    evidence_path = config.publishing.evidence_dir / f"{bundle_id}.json"
+    record = load_record(evidence_path)
+    record["technocore"] = {
+        "room": receipt["room"],
+        "seq": int(receipt["seq"]),
+        "nonce": int(receipt["nonce"]),
+        "message_sha256": hashlib.sha256(str(receipt["text"]).encode()).hexdigest(),
+    }
+    corrected = sign_record(record, identity)
+    write_record(evidence_path, corrected)
+    build_site(config.publishing.evidence_dir, config.publishing.site_dir)
+    return {
+        "bundle": bundle_id,
+        "receipt": receipt,
+        "url": corrected_url,
+        "evidence": str(evidence_path),
+    }

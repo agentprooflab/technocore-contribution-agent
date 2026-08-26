@@ -123,6 +123,8 @@ def prepare(
             "category": candidate["category"],
             "priority": candidate["priority"],
             "source": candidate["source"],
+            "external_id": candidate["external_id"],
+            "actor_id": candidate["actor_id"],
             "source_url": candidate["url"],
             "title": candidate["title"],
             "body": candidate["body"],

@@ -19,7 +19,7 @@ from tca.evidence import (
 )
 from tca.identity import Identity, MacOSKeychain
 from tca.observer import observe
-from tca.publisher import publish_bundle, publish_identity_note
+from tca.publisher import publish_bundle, publish_identity_note, reconcile_bundle_receipt
 from tca.ranking import rank
 from tca.site import build_site
 from tca.state import State, iso_now
@@ -80,6 +80,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     verify_parser = sub.add_parser("verify", help="verify one evidence record")
     verify_parser.add_argument("evidence", type=Path)
+
+    reconcile_parser = sub.add_parser(
+        "reconcile", help="repair a stored Technocore receipt without reposting"
+    )
+    reconcile_parser.add_argument("bundle")
 
     sub.add_parser("status", help="show shadow gate and workflow state")
 
@@ -142,6 +147,8 @@ def main(argv: list[str] | None = None) -> None:
             _json({"valid": valid, "errors": errors, "path": str(args.evidence)})
             if not valid:
                 raise SystemExit(1)
+        elif args.command == "reconcile":
+            _json(reconcile_bundle_receipt(config, state, identity, args.bundle))
         elif args.command == "status":
             remaining = state.shadow_remaining(config.observer.shadow_hours)
             _json(

@@ -4,6 +4,7 @@ import base64
 import hashlib
 import re
 import secrets
+import shutil
 import subprocess
 import unicodedata
 from dataclasses import dataclass
@@ -34,6 +35,8 @@ class MacOSKeychain:
     account: str
 
     def get(self) -> bytes | None:
+        if not shutil.which("security"):
+            return None
         result = subprocess.run(
             [
                 "security",
@@ -53,6 +56,8 @@ class MacOSKeychain:
         return base64.b64decode(result.stdout.strip(), validate=True)
 
     def put(self, secret: bytes) -> None:
+        if not shutil.which("security"):
+            raise RuntimeError("macOS Keychain is unavailable on this host")
         encoded = base64.b64encode(secret).decode()
         subprocess.run(
             [

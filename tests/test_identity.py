@@ -4,6 +4,7 @@ import pytest
 
 from tca.identity import (
     Identity,
+    MacOSKeychain,
     MemorySecretStore,
     clean_text,
     did_note_location,
@@ -47,3 +48,11 @@ def test_clean_text_rejects_empty_and_over_limit() -> None:
         clean_text("\n\t", 10)
     with pytest.raises(ValueError):
         clean_text("x" * 11, 10)
+
+
+def test_keychain_is_read_only_unavailable_off_macos(monkeypatch) -> None:
+    monkeypatch.setattr("tca.identity.shutil.which", lambda _: None)
+    keychain = MacOSKeychain("test", "test")
+    assert keychain.get() is None
+    with pytest.raises(RuntimeError, match="unavailable"):
+        keychain.put(bytes(32))

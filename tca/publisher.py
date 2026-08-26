@@ -104,8 +104,21 @@ def _read_room(base_url: str, room: str) -> list[dict[str, Any]]:
 def _find_receipt(base_url: str, room: str, did: str, nonce: int) -> dict[str, Any] | None:
     for message in _read_room(base_url, room):
         if message.get("from") == did and int(message.get("nonce", -1)) == nonce:
-            return message
+            return {**message, "room": room}
     return None
+
+
+def _receipt_from_url(url: str, text: str, did: str) -> dict[str, Any]:
+    match = re.search(r"#r/([^/]+)/([0-9]+)\?nonce=([0-9]+)$", url)
+    if not match:
+        raise RuntimeError("stored Technocore receipt URL is not parseable")
+    return {
+        "room": match.group(1),
+        "seq": int(match.group(2)),
+        "nonce": int(match.group(3)),
+        "from": did,
+        "text": text,
+    }
 
 
 def _technocore_message(
@@ -272,7 +285,15 @@ def publish_bundle(
         key = _action_key(action)
         existing = state.action(bundle_id, action_type, key)
         if existing and existing["status"] == "success":
-            results[action_type] = {"url": existing["external_url"], "reused": True}
+            reused_result: dict[str, Any] = {
+                "url": existing["external_url"],
+                "reused": True,
+            }
+            if action_type == "technocore":
+                reused_result["receipt"] = _receipt_from_url(
+                    str(existing["external_url"]), action["text"], identity.did()
+                )
+            results[action_type] = reused_result
             continue
         state.set_action(bundle_id, action_type, key, "running")
         try:
@@ -300,7 +321,7 @@ def publish_bundle(
     technocore_result = results["technocore"]
     receipt = technocore_result.get("receipt")
     if receipt is None:
-        raise RuntimeError("reused Technocore receipt requires manual evidence reconciliation")
+        raise RuntimeError("Technocore receipt requires manual evidence reconciliation")
     tests = bundle["tests"]
     evidence = {
         "schema": SCHEMA,

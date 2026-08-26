@@ -85,6 +85,8 @@ def run_probes() -> dict:
             capture_output=True,
             check=False,
         )
+        skipped = b" skipped" in result.stdout
+        passed = result.returncode == 0 and not skipped
         probes.append(
             {
                 "id": probe_id,
@@ -92,7 +94,7 @@ def run_probes() -> dict:
                 "exit_code": result.returncode,
                 "stdout_sha256": sha256(result.stdout),
                 "stderr_sha256": sha256(result.stderr),
-                "result": "pass" if result.returncode == 0 else "fail",
+                "result": "pass" if passed else "fail",
             }
         )
     failures = [probe["id"] for probe in probes if probe["result"] != "pass"]

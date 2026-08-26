@@ -48,6 +48,7 @@ def main() -> None:
         ROOT / "scripts",
         ROOT / "launchd",
         ROOT / "config",
+        ROOT / ".github/workflows",
     ]
     paths = [path for group in tracked_groups if group.exists() for path in group.rglob("*")]
     paths.extend([ROOT / "README.md", ROOT / "LICENSE", ROOT / "pyproject.toml", ROOT / "uv.lock"])

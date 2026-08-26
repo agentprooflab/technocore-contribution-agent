@@ -5,11 +5,13 @@ import os
 import shutil
 import stat
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 ROOT = Path(__file__).parents[1]
+pytestmark = pytest.mark.skipif(sys.platform != "darwin", reason="launchd installer is macOS-only")
 
 
 def write_executable(path: Path, body: str) -> None:

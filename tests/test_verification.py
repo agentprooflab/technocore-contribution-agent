@@ -1,3 +1,7 @@
+import sys
+
+import pytest
+
 from evals.run_context_eval import evaluate
 from verification.run import (
     compare,
@@ -31,6 +35,7 @@ def test_dashboard_contract_probe_reports_no_failures() -> None:
     assert dashboard_contract_failures(dashboard) == []
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="S2 is executed by the macOS CI job")
 def test_every_registered_vertical_slice_is_executed() -> None:
     report = run_gates()
     assert report["schema"] == "technocore-verification-result/v3"

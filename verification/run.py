@@ -41,6 +41,7 @@ def _source_manifest() -> list[dict[str, str]]:
         "scripts/*.sh",
         "scripts/*.py",
         "launchd/*.template",
+        ".github/workflows/*.yml",
         "verification/*.py",
         "verification/slices.yaml",
         "verification/golden-brief-v1.json",

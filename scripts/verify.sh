@@ -9,4 +9,5 @@ uv run ruff check .
 uv run ruff format --check .
 uv run pytest
 uv run python -m evals.run_context_eval --verify
+uv run python -m verification.run --verify
 uv run tca site --check

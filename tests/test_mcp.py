@@ -89,13 +89,54 @@ def test_strict_json_rejects_duplicates_constants_and_depth() -> None:
 
 def test_initialize_and_notifications_contract(tmp_path) -> None:
     state = populated_state(tmp_path)
-    initialized = handle_request(state, "agentproof", request("initialize"))
+    initialized = handle_request(
+        state,
+        "agentproof",
+        request(
+            "initialize",
+            {
+                "protocolVersion": "2025-06-18",
+                "capabilities": {},
+                "clientInfo": {"name": "test", "version": "1"},
+            },
+        ),
+    )
     assert initialized["result"]["serverInfo"]["name"] == "technocore-brief"
     assert (
         handle_request(
             state,
             "agentproof",
             {"jsonrpc": "2.0", "method": "notifications/initialized"},
+        )
+        is None
+    )
+    invalid = handle_request(state, "agentproof", request("initialize", {}))
+    assert invalid["error"]["code"] == -32602
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        {"budget_units": True},
+        {"budget_units": 100001},
+        {"as_of": {"not": "a string"}},
+        {"mention_markers": ["x" * 161]},
+    ],
+)
+def test_declared_mcp_argument_bounds_are_enforced(tmp_path, arguments) -> None:
+    state = populated_state(tmp_path)
+    response = handle_request(
+        state,
+        "agentproof",
+        request("tools/call", {"name": "get_relevant_updates", "arguments": arguments}),
+    )
+    assert response["result"]["isError"] is True
+    assert response["result"]["structuredContent"]["error"]["code"] == "INVALID_ARGUMENTS"
+    assert (
+        handle_request(
+            state,
+            "agentproof",
+            {"jsonrpc": "2.0", "method": "notifications/cancelled", "params": {}},
         )
         is None
     )

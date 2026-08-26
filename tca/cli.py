@@ -99,8 +99,10 @@ def build_parser() -> argparse.ArgumentParser:
     brief_parser = sub.add_parser("brief", help="return a token-budgeted attention brief")
     brief_parser.add_argument("--consumer", default="default")
     brief_parser.add_argument("--interest", action="append", default=[])
+    brief_parser.add_argument("--mention", action="append", default=[])
     brief_parser.add_argument("--budget", type=int, default=800)
     brief_parser.add_argument("--as-of")
+    brief_parser.add_argument("--continue-from")
 
     expand_parser = sub.add_parser("expand", help="expand exact evidence revisions")
     expand_parser.add_argument("evidence", nargs="+")
@@ -201,8 +203,10 @@ def main(argv: list[str] | None = None) -> None:
                     state,
                     consumer_id=args.consumer,
                     interests=args.interest,
+                    mention_markers=args.mention,
                     requested_budget=args.budget,
                     as_of=args.as_of,
+                    continuation=args.continue_from,
                 )
             )
         elif args.command == "expand":

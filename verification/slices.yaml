@@ -10,6 +10,7 @@
         {"id": "S1-SAFETY-NO-SIDE-EFFECTS", "class": "safety", "blocking": true, "command": ["uv", "run", "pytest", "tests/test_context_security.py"], "metric": "content_attributable_io_calls", "comparator": "equal", "threshold": 0, "report_path": "verification/slice-1.json"},
         {"id": "S1-OFFICIAL-CORPUS", "class": "correctness", "blocking": true, "command": ["uv", "run", "python", "-m", "evals.run_context_eval", "--verify"], "metric": "official_fixture_false_negatives_plus_false_positives", "comparator": "equal", "threshold": 0, "report_path": "verification/slice-1.json"},
         {"id": "S1-BUDGET", "class": "efficiency", "blocking": true, "command": ["uv", "run", "pytest", "tests/test_context.py", "-k", "budget"], "metric": "budget_overruns", "comparator": "equal", "threshold": 0, "report_path": "verification/slice-1.json"}
+        ,{"id": "S1-CONTEXT-REDUCTION", "class": "efficiency", "blocking": true, "command": ["uv", "run", "python", "-m", "evals.run_context_eval", "--verify"], "metric": "consumer_context_reduction_basis_points", "comparator": "greater_than_or_equal", "threshold": 5000, "report_path": "verification/slice-1.json"}
       ]
     }
   ]

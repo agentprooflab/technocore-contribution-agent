@@ -153,3 +153,99 @@ def test_brief_is_digest_deterministic_for_fixed_state_and_time(tmp_path) -> Non
     first = build_brief(state, **options)
     second = build_brief(state, **options)
     assert payload_digest(first) == payload_digest(second)
+
+
+def test_dedupe_keeps_highest_authority_and_acknowledges_whole_group(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    body = "Complete this official task by Friday"
+    state.upsert_observation(
+        {
+            "id": "technocore:chat:1",
+            "source": "technocore",
+            "external_id": "chat:1",
+            "actor_id": "did:key:z6MkCopy",
+            "kind": "room_message",
+            "title": body,
+            "body": body,
+            "authoritative": False,
+            "created_at": "2026-08-27T00:00:00+00:00",
+            "observed_at": "2026-08-27T00:00:01+00:00",
+        }
+    )
+    add(state, 2, body=body, created_at="2026-08-27T00:01:00+00:00")
+    brief = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=900,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    assert len(brief["items"]) == 1
+    assert brief["items"][0]["source"] == "x"
+    assert brief["items"][0]["priority"] == 100
+    assert brief["items"][0]["related_evidence_count"] == 2
+    acknowledge_observations(state, "agentproof", [brief["items"][0]["evidence_id"]])
+    again = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=900,
+        as_of="2026-08-27T01:01:00+00:00",
+    )
+    assert again["items"] == []
+
+
+def test_continuation_retrieves_every_critical_item_once(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    for number in range(1, 11):
+        add(state, number)
+    evidence_ids = []
+    cursor = None
+    while True:
+        page = build_brief(
+            state,
+            consumer_id="agentproof",
+            requested_budget=800,
+            as_of="2026-08-27T01:00:00+00:00",
+            continuation=cursor,
+        )
+        if page["critical_items_remaining"]:
+            assert all(item["priority"] == 100 for item in page["items"])
+        evidence_ids.extend(item["evidence_id"] for item in page["items"])
+        cursor = page["continuation_cursor"]
+        if not cursor:
+            break
+    assert len(evidence_ids) == 10
+    assert len(set(evidence_ids)) == 10
+
+
+def test_technocore_excerpt_is_withheld_until_expansion(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    body = "Can someone explain the nonce rule?"
+    state.upsert_observation(
+        {
+            "id": "technocore:chat:1",
+            "source": "technocore",
+            "external_id": "chat:1",
+            "actor_id": "did:key:z6MkQuestion",
+            "kind": "technical_question",
+            "title": body,
+            "body": body,
+            "authoritative": False,
+            "created_at": "2026-08-27T00:00:00+00:00",
+            "observed_at": "2026-08-27T00:00:01+00:00",
+        }
+    )
+    brief = build_brief(
+        state,
+        consumer_id="agentproof",
+        requested_budget=900,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    assert brief["items"][0]["excerpt_status"] == "withheld_untrusted"
+    assert body not in brief["items"][0]["excerpt"]
+    expanded = expand_observations(
+        state,
+        [brief["items"][0]["evidence_id"]],
+        requested_budget=900,
+        as_of="2026-08-27T01:00:00+00:00",
+    )
+    assert expanded["items"][0]["content"] == body

@@ -3,9 +3,62 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
-    "as_of": {"type": "string"},
-    "budget": {"type": "object"},
-    "items": {"items": {"type": "object"}, "type": "array"},
+    "as_of": {"format": "date-time", "type": "string"},
+    "budget": {
+      "additionalProperties": false,
+      "properties": {
+        "estimated_used": {"minimum": 0, "type": "integer"},
+        "method": {"const": "canonical-utf8-div3-v1"},
+        "requested": {"minimum": 1, "type": "integer"},
+        "scope": {"const": "domain_payload_only"}
+      },
+      "required": ["requested", "estimated_used", "method", "scope"],
+      "type": "object"
+    },
+    "items": {
+      "items": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "actor": {"type": ["string", "null"]},
+              "content": {"type": "string"},
+              "content_sha256": {"pattern": "^[0-9a-f]{64}$"},
+              "content_trust": {"const": "untrusted"},
+              "created_at": {"type": ["string", "null"]},
+              "evidence_id": {"type": "string"},
+              "external_id": {"type": "string"},
+              "source": {"type": "string"},
+              "source_url": {"type": ["string", "null"]},
+              "status": {"const": "included"}
+            },
+            "required": ["evidence_id", "status", "content", "content_sha256", "content_trust", "source", "external_id"],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "content_sha256": {"pattern": "^[0-9a-f]{64}$"},
+              "evidence_id": {"type": "string"},
+              "required_units": {"minimum": 1, "type": "integer"},
+              "status": {"const": "omitted_budget"}
+            },
+            "required": ["evidence_id", "status", "content_sha256", "required_units"],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "evidence_id": {"type": "string"},
+              "status": {"enum": ["unknown", "restricted"]}
+            },
+            "required": ["evidence_id", "status"],
+            "type": "object"
+          }
+        ]
+      },
+      "type": "array"
+    },
     "schema": {"const": "technocore-context-expansion/v1"}
   },
   "required": ["schema", "as_of", "budget", "items"],

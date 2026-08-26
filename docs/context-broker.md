@@ -33,7 +33,8 @@ line-feed. Public schemas contain no floating-point fields.
 
 An observation has a stable logical identifier and one or more immutable material revisions. A
 revision digest excludes collection-time metadata. Acknowledgment keys are
-`(consumer_id, logical_id, revision_digest)`, so edits and tombstones reappear.
+`(consumer_id, logical_id, revision_digest)`, so edits and observed source-state transitions
+reappear. Absence from a sampled source is never treated as authoritative deletion.
 
 Technocore source identities include room and local epoch. When the service provides no
 authoritative room epoch, a sequence rewind is `epoch_ambiguous`; the collector never silently

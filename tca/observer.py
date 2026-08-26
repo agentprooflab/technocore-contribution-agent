@@ -38,7 +38,7 @@ def _github_observations(config: Config) -> list[dict[str, Any]]:
         [
             "gh",
             "api",
-            f"repos/{repo}/issues?state=open&per_page=100&sort=updated&direction=desc",
+            f"repos/{repo}/issues?state=all&per_page=100&sort=updated&direction=desc",
         ]
     )
     items: list[dict[str, Any]] = []
@@ -52,6 +52,7 @@ def _github_observations(config: Config) -> list[dict[str, Any]]:
             or str(author.get("login", "")).lower() in maintainers
         )
         number = str(issue["number"])
+        issue_state = str(issue.get("state", "open"))
         items.append(
             {
                 "id": f"github:{repo}:{'pr' if is_pr else 'issue'}:{number}",
@@ -59,14 +60,56 @@ def _github_observations(config: Config) -> list[dict[str, Any]]:
                 "external_id": number,
                 "actor_id": str(author.get("id", "")),
                 "actor_username": author.get("login"),
-                "kind": "pull_request" if is_pr else "issue",
+                "kind": (
+                    "pull_request"
+                    if is_pr
+                    else ("issue" if issue_state == "open" else "closed_issue")
+                ),
                 "title": issue.get("title", ""),
                 "body": issue.get("body") or "",
                 "url": issue.get("html_url"),
                 "created_at": issue.get("created_at"),
                 "observed_at": iso_now(),
                 "authoritative": authoritative,
+                "source_state": issue_state,
                 "raw": issue,
+            }
+        )
+    return items
+
+
+def _x_posts_to_observations(
+    account: Any, posts: list[dict[str, Any]], *, observed_at: str | None = None
+) -> list[dict[str, Any]]:
+    items: list[dict[str, Any]] = []
+    observed = observed_at or iso_now()
+    for post in posts:
+        author = post.get("author") or {}
+        author_id = str(post.get("authorId", ""))
+        username = str(author.get("username", ""))
+        authoritative = (
+            author_id == account.user_id and username.lower() == account.username.lower()
+        )
+        text = post.get("text") or ""
+        kind = (
+            "official_task" if any(word in text.lower() for word in TASK_WORDS) else "announcement"
+        )
+        items.append(
+            {
+                "id": f"x:{post['id']}",
+                "source": "x",
+                "external_id": str(post["id"]),
+                "actor_id": author_id,
+                "actor_username": username,
+                "kind": kind,
+                "title": text.splitlines()[0][:180],
+                "body": text,
+                "url": f"https://x.com/{username}/status/{post['id']}",
+                "created_at": post.get("createdAt"),
+                "observed_at": observed,
+                "authoritative": authoritative,
+                "source_state": "visible",
+                "raw": post,
             }
         )
     return items
@@ -91,36 +134,7 @@ def _x_observations(config: Config) -> list[dict[str, Any]]:
             ]
         )
         posts = _run_json(bird_command)
-        for post in posts:
-            author = post.get("author") or {}
-            author_id = str(post.get("authorId", ""))
-            username = str(author.get("username", ""))
-            authoritative = (
-                author_id == account.user_id and username.lower() == account.username.lower()
-            )
-            text = post.get("text") or ""
-            kind = (
-                "official_task"
-                if any(word in text.lower() for word in TASK_WORDS)
-                else "announcement"
-            )
-            items.append(
-                {
-                    "id": f"x:{post['id']}",
-                    "source": "x",
-                    "external_id": str(post["id"]),
-                    "actor_id": author_id,
-                    "actor_username": username,
-                    "kind": kind,
-                    "title": text.splitlines()[0][:180],
-                    "body": text,
-                    "url": f"https://x.com/{username}/status/{post['id']}",
-                    "created_at": post.get("createdAt"),
-                    "observed_at": iso_now(),
-                    "authoritative": authoritative,
-                    "raw": post,
-                }
-            )
+        items.extend(_x_posts_to_observations(account, posts))
     return items
 
 
@@ -153,7 +167,7 @@ def _technocore_item(
     nonce = message.get("nonce")
     findings = scan_untrusted(text)
     external = f"{room}:{sequence}"
-    anchor = f"{room}:{epoch}:{sequence}"
+    anchor = f"{room}:{sequence}" if epoch == 0 else f"{room}:{epoch}:{sequence}"
     suffix = f"?nonce={nonce}" if nonce is not None else ""
     return {
         "id": f"technocore:{anchor}",
@@ -168,7 +182,9 @@ def _technocore_item(
         "created_at": message.get("ts"),
         "observed_at": iso_now(),
         "authoritative": False,
-        "exposure_class": "restricted" if room.startswith(("p-", "mb-")) else "public",
+        "exposure_class": (
+            "restricted" if room.startswith(("p-", "mb-", "e-p-", "mb-p-")) else "public"
+        ),
         "raw": {
             **message,
             "room": room,
@@ -184,8 +200,32 @@ def _observe_technocore(config: Config, state: State) -> int:
         cursor_row = state.source_cursor("technocore", room)
         cursor = str(cursor_row["cursor"]) if cursor_row and cursor_row["cursor"] else None
         epoch = int(cursor_row["epoch"]) if cursor_row else 0
+        if cursor_row and cursor_row["state"] == "epoch_ambiguous":
+            continue
         params: dict[str, Any] = {"format": "json", "limit": 200}
         if cursor is not None:
+            tail = _get_json(
+                f"{config.observer.technocore_base_url}/r/{room}?"
+                f"{urlencode({'format': 'json', 'limit': 1})}"
+            )
+            actual_tail = int(tail.get("last_seq") or 0)
+            if actual_tail < int(cursor):
+                state.commit_observation_page(
+                    source="technocore",
+                    scope=room,
+                    epoch=epoch,
+                    expected_cursor=cursor,
+                    observations=[],
+                    coverage_ranges=[],
+                    next_cursor=cursor,
+                    cursor_state="epoch_ambiguous",
+                    exposure_class=(
+                        "restricted"
+                        if room.startswith(("p-", "mb-", "e-p-", "mb-p-"))
+                        else "public"
+                    ),
+                )
+                continue
             params["since"] = cursor
         payload = _get_json(f"{config.observer.technocore_base_url}/r/{room}?{urlencode(params)}")
         messages = sorted(payload.get("messages", []), key=lambda item: int(item["seq"]))
@@ -211,6 +251,10 @@ def _observe_technocore(config: Config, state: State) -> int:
         for left, right in zip(sequences, sequences[1:], strict=False):
             if right > left + 1:
                 coverage.append((left + 1, right - 1, "unknown_gap"))
+        if sequences and reported_last > sequences[-1]:
+            coverage.append((sequences[-1] + 1, reported_last, "pending_fetch"))
+        elif cursor is not None and not sequences and reported_last > int(cursor):
+            coverage.append((int(cursor) + 1, reported_last, "pending_fetch"))
 
         items = [_technocore_item(config, room, epoch, message) for message in messages]
         next_cursor = str(max(sequences)) if sequences else cursor
@@ -222,6 +266,9 @@ def _observe_technocore(config: Config, state: State) -> int:
             observations=items,
             coverage_ranges=coverage,
             next_cursor=next_cursor,
+            exposure_class=(
+                "restricted" if room.startswith(("p-", "mb-", "e-p-", "mb-p-")) else "public"
+            ),
         )
     return inserted
 
@@ -239,6 +286,10 @@ def observe(config: Config, state: State, github_only: bool = False) -> dict[str
             for item in collector(config):
                 count += int(state.upsert_observation(item))
             inserted[name] = count
+            if name == "github":
+                state.set_source_health("github", config.github.upstream_repo, "sampled")
+            elif name == "x":
+                state.set_source_health("x", "official_accounts", "sampled")
         except (
             RuntimeError,
             subprocess.CalledProcessError,
@@ -247,6 +298,8 @@ def observe(config: Config, state: State, github_only: bool = False) -> dict[str
             TimeoutError,
         ) as exc:
             errors[name] = str(exc)
+            scope = config.github.upstream_repo if name == "github" else "official_accounts"
+            state.set_source_health(name, scope, "unavailable")
     if not github_only:
         try:
             inserted["technocore"] = _observe_technocore(config, state)
@@ -258,6 +311,17 @@ def observe(config: Config, state: State, github_only: bool = False) -> dict[str
             TimeoutError,
         ) as exc:
             errors["technocore"] = str(exc)
+            for room in config.observer.rooms:
+                state.set_source_health(
+                    "technocore",
+                    room,
+                    "unavailable",
+                    exposure_class=(
+                        "restricted"
+                        if room.startswith(("p-", "mb-", "e-p-", "mb-p-"))
+                        else "public"
+                    ),
+                )
     report = {"inserted": inserted, "errors": errors, "observed_at": iso_now()}
     state.set_meta("last_observe_report", json.dumps(report, sort_keys=True))
     state.set_meta("last_observe_at", report["observed_at"])

@@ -18,7 +18,7 @@ def iso_now() -> str:
     return utc_now().isoformat()
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 LEGACY_SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (
@@ -146,6 +146,11 @@ V2_STATEMENTS = (
     "CREATE INDEX IF NOT EXISTS acknowledgments_consumer ON acknowledgments(consumer_id)",
 )
 
+V3_STATEMENTS = (
+    "ALTER TABLE source_cursors ADD COLUMN exposure_class TEXT NOT NULL DEFAULT 'restricted'",
+    "ALTER TABLE coverage_ranges ADD COLUMN exposure_class TEXT NOT NULL DEFAULT 'restricted'",
+)
+
 
 class StaleCursorError(RuntimeError):
     pass
@@ -171,7 +176,7 @@ def _material_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "url": payload.get("url"),
         "created_at": payload.get("created_at"),
         "authoritative": int(bool(payload.get("authoritative"))),
-        "raw": payload.get("raw", payload),
+        "source_state": payload.get("source_state"),
     }
 
 
@@ -200,10 +205,107 @@ class State:
                     connection.execute(statement)
                 connection.execute("PRAGMA user_version=2")
                 connection.commit()
+                version = 2
             except Exception:
                 connection.rollback()
                 raise
+        if version == 2:
+            self._migrate_v3(connection)
         self._backfill_revisions(connection)
+
+    def _migrate_v3(self, connection: sqlite3.Connection) -> None:
+        connection.execute("BEGIN IMMEDIATE")
+        try:
+            for statement in V3_STATEMENTS:
+                connection.execute(statement)
+            duplicates = connection.execute(
+                """SELECT id, external_id FROM observations
+                WHERE source = 'technocore' AND id GLOB 'technocore:*:0:*'"""
+            ).fetchall()
+            for duplicate in duplicates:
+                legacy_id = f"technocore:{duplicate['external_id']}"
+                exists = connection.execute(
+                    "SELECT 1 FROM observations WHERE id = ?", (legacy_id,)
+                ).fetchone()
+                if not exists:
+                    continue
+                connection.execute(
+                    """INSERT OR IGNORE INTO observation_revisions
+                    (observation_id, revision_digest, material_json, first_seen_at, last_seen_at,
+                     exposure_class, quarantine_reason, tombstone)
+                    SELECT ?, revision_digest, material_json, first_seen_at, last_seen_at,
+                    exposure_class, quarantine_reason, tombstone
+                    FROM observation_revisions WHERE observation_id = ?""",
+                    (legacy_id, duplicate["id"]),
+                )
+                connection.execute(
+                    "UPDATE candidates SET observation_id = ? WHERE observation_id = ?",
+                    (legacy_id, duplicate["id"]),
+                )
+                connection.execute(
+                    """INSERT OR IGNORE INTO acknowledgments
+                    (consumer_id, observation_id, revision_digest, acknowledged_at)
+                    SELECT consumer_id, ?, revision_digest, acknowledged_at
+                    FROM acknowledgments WHERE observation_id = ?""",
+                    (legacy_id, duplicate["id"]),
+                )
+                connection.execute(
+                    "DELETE FROM acknowledgments WHERE observation_id = ?", (duplicate["id"],)
+                )
+                connection.execute(
+                    "DELETE FROM orientation_cache WHERE observation_id = ?", (duplicate["id"],)
+                )
+                connection.execute("DELETE FROM observations WHERE id = ?", (duplicate["id"],))
+            current_rows = connection.execute(
+                """SELECT o.*, h.revision_digest AS old_digest,
+                r.exposure_class, r.quarantine_reason, r.first_seen_at, r.last_seen_at
+                FROM observations o
+                JOIN observation_heads h ON h.observation_id = o.id
+                JOIN observation_revisions r ON r.observation_id = h.observation_id
+                    AND r.revision_digest = h.revision_digest"""
+            ).fetchall()
+            for row in current_rows:
+                raw = json.loads(row["raw_json"])
+                payload = {
+                    **dict(row),
+                    "source_state": raw.get("state") if isinstance(raw, dict) else None,
+                }
+                material_json = canonical_json(_material_from_payload(payload))
+                new_digest = sha256_text(material_json)
+                if new_digest == row["old_digest"]:
+                    continue
+                connection.execute(
+                    """INSERT OR IGNORE INTO observation_revisions
+                    (observation_id, revision_digest, material_json, first_seen_at, last_seen_at,
+                     exposure_class, quarantine_reason, tombstone)
+                    VALUES(?, ?, ?, ?, ?, ?, ?, 0)""",
+                    (
+                        row["id"],
+                        new_digest,
+                        material_json,
+                        row["first_seen_at"],
+                        row["last_seen_at"],
+                        row["exposure_class"],
+                        row["quarantine_reason"],
+                    ),
+                )
+                connection.execute(
+                    "UPDATE observation_heads SET revision_digest = ? WHERE observation_id = ?",
+                    (new_digest, row["id"]),
+                )
+                connection.execute(
+                    """INSERT OR IGNORE INTO acknowledgments
+                    (consumer_id, observation_id, revision_digest, acknowledged_at)
+                    SELECT consumer_id, observation_id, ?, acknowledged_at
+                    FROM acknowledgments
+                    WHERE observation_id = ? AND revision_digest = ?""",
+                    (new_digest, row["id"], row["old_digest"]),
+                )
+            connection.execute("PRAGMA user_version=3")
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
 
     def _backfill_revisions(self, connection: sqlite3.Connection) -> None:
         rows = connection.execute(
@@ -239,15 +341,19 @@ class State:
 
     @staticmethod
     def _exposure_class(payload: dict[str, Any]) -> str:
-        explicit = payload.get("exposure_class")
-        if explicit in {"public", "restricted"}:
-            return explicit
         external = str(payload.get("external_id", ""))
-        if payload.get("source") == "technocore":
+        source = payload.get("source")
+        explicit = payload.get("exposure_class")
+        if source == "technocore":
             room = external.split(":", 1)[0]
             if room.startswith(("p-", "mb-", "e-p-", "mb-p-")):
                 return "restricted"
-        return "public"
+            return "restricted" if explicit == "restricted" else "public"
+        if explicit == "restricted":
+            return "restricted"
+        if source in {"x", "github"}:
+            return "public"
+        return "restricted"
 
     @staticmethod
     def _quarantine_reason(payload: dict[str, Any]) -> str | None:
@@ -324,10 +430,21 @@ class State:
             (payload["id"],),
         ).fetchone()
         if existing_head and existing_head["revision_digest"] == revision_digest:
+            exposure = self._exposure_class(item)
+            quarantine = self._quarantine_reason(item)
             connection.execute(
-                """UPDATE observation_revisions SET last_seen_at = ?
+                """UPDATE observation_revisions SET last_seen_at = ?,
+                exposure_class = CASE WHEN exposure_class = 'restricted' OR ? = 'restricted'
+                    THEN 'restricted' ELSE 'public' END,
+                quarantine_reason = COALESCE(?, quarantine_reason)
                 WHERE observation_id = ? AND revision_digest = ?""",
-                (payload["observed_at"], payload["id"], revision_digest),
+                (
+                    payload["observed_at"],
+                    exposure,
+                    quarantine,
+                    payload["id"],
+                    revision_digest,
+                ),
             )
             return False, revision_digest
 
@@ -467,6 +584,7 @@ class State:
         epoch: int,
         additions: list[tuple[int, int, str]],
         recorded_at: str,
+        exposure_class: str,
     ) -> None:
         existing = [
             (int(row["start_value"]), int(row["end_value"]), str(row["state"]))
@@ -483,10 +601,10 @@ class State:
         )
         connection.executemany(
             """INSERT INTO coverage_ranges
-            (source, scope, epoch, start_value, end_value, state, recorded_at)
-            VALUES(?, ?, ?, ?, ?, ?, ?)""",
+            (source, scope, epoch, start_value, end_value, state, recorded_at, exposure_class)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?)""",
             [
-                (source, scope, epoch, start, end, state, recorded_at)
+                (source, scope, epoch, start, end, state, recorded_at, exposure_class)
                 for start, end, state in normalized
             ],
         )
@@ -503,6 +621,7 @@ class State:
         next_cursor: str | None,
         cursor_state: str = "active",
         not_before: str | None = None,
+        exposure_class: str = "public",
     ) -> int:
         recorded_at = iso_now()
         with self.connect() as connection:
@@ -523,18 +642,66 @@ class State:
                 item_changed, _ = self._upsert_observation(connection, item)
                 changed += int(item_changed)
             self._replace_coverage_ranges(
-                connection, source, scope, epoch, coverage_ranges, recorded_at
+                connection,
+                source,
+                scope,
+                epoch,
+                coverage_ranges,
+                recorded_at,
+                exposure_class,
             )
             connection.execute(
                 """INSERT INTO source_cursors
-                (source, scope, epoch, cursor, state, not_before, updated_at)
-                VALUES(?, ?, ?, ?, ?, ?, ?)
+                (source, scope, epoch, cursor, state, not_before, updated_at, exposure_class)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(source, scope) DO UPDATE SET epoch=excluded.epoch,
                 cursor=excluded.cursor, state=excluded.state, not_before=excluded.not_before,
-                updated_at=excluded.updated_at""",
-                (source, scope, epoch, next_cursor, cursor_state, not_before, recorded_at),
+                updated_at=excluded.updated_at, exposure_class=excluded.exposure_class""",
+                (
+                    source,
+                    scope,
+                    epoch,
+                    next_cursor,
+                    cursor_state,
+                    not_before,
+                    recorded_at,
+                    exposure_class,
+                ),
             )
         return changed
+
+    def set_source_health(
+        self,
+        source: str,
+        scope: str,
+        health: str,
+        *,
+        exposure_class: str = "public",
+        not_before: str | None = None,
+    ) -> None:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT epoch, cursor FROM source_cursors WHERE source = ? AND scope = ?",
+                (source, scope),
+            ).fetchone()
+            connection.execute(
+                """INSERT INTO source_cursors
+                (source, scope, epoch, cursor, state, not_before, updated_at, exposure_class)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(source, scope) DO UPDATE SET state=excluded.state,
+                not_before=excluded.not_before, updated_at=excluded.updated_at,
+                exposure_class=excluded.exposure_class""",
+                (
+                    source,
+                    scope,
+                    int(row["epoch"]) if row else 0,
+                    row["cursor"] if row else None,
+                    health,
+                    not_before,
+                    iso_now(),
+                    exposure_class,
+                ),
+            )
 
     def coverage_rows(self) -> list[sqlite3.Row]:
         with self.connect() as connection:

@@ -1,8 +1,9 @@
-# Technocore Contribution Agent
+# Technocore Brief and Contribution Agent
 
 Contribution-first automation for Technocore with one durable Ed25519 DID, read-only discovery,
 deterministic candidate ranking, digest-locked approval bundles, idempotent publication, and signed
-public evidence.
+public evidence. Version 0.2 adds Technocore Brief: a coverage-aware, token-budgeted evidence inbox
+for agents monitoring configured public rooms and allowlisted sources.
 
 The software cannot guarantee a FLOP allocation. It deliberately optimizes for sustained,
 difficult-to-fake usefulness rather than identity count or message volume.
@@ -33,6 +34,45 @@ uv run tca status
 `observe` starts any configured shadow clock on first use. It reads GitHub, allowlisted X timelines,
 and the configured Technocore rooms. The state database defaults to
 `~/.local/share/tca/state.db` and is never committed.
+
+## Technocore Brief
+
+The agent-facing journey is deliberately small:
+
+```bash
+uv run tca brief --consumer my-agent --interest technocore --budget 800
+uv run tca expand OBSERVATION_ID@REVISION_SHA256 --budget 600
+uv run tca acknowledge --consumer my-agent OBSERVATION_ID@REVISION_SHA256
+uv run tca coverage
+uv run tca collisions OBSERVATION_ID
+```
+
+`brief` returns exact bounded excerpts, observable match reasons, precise revision identifiers, and
+coverage. `expand` returns exact stored content and continues to label it untrusted. Acknowledgment
+is local, consumer-scoped, and revision-scoped; an edited source resurfaces. Collision detection is
+exact-only in 0.2 and reports uncertainty when relevant coverage is incomplete.
+
+Run the read-only stdio MCP server with:
+
+```bash
+uv run tca-mcp --consumer my-agent
+```
+
+It exposes only `get_relevant_updates`, `expand_observations`, and `coverage_report`. It has no
+publish, sign, shell, browser, URL-fetch, raw-file, raw-database, or acknowledgment tool, and its
+startup path does not read the Keychain identity.
+
+The committed dashboard in `docs/` is generated from a public-safe evaluation snapshot and the
+signed evidence directory:
+
+```bash
+uv run tca site
+uv run tca site --check
+```
+
+The context schemas and verification contract are in `schemas/` and `verification/`. The design is
+for adapter neutrality; only the built-in SQLite observation store ships in 0.2, so the project does
+not claim to be indexer-neutral yet.
 
 GitHub Actions runs GitHub-only observation every 30 minutes with read-only repository permission.
 For local ten-minute monitoring, review and run `scripts/install-launchd.sh --approve`; the installer
@@ -154,9 +194,17 @@ visible instead of silently deleting them and can be served by GitHub Pages from
 
 ```bash
 uv run ruff check .
+uv run ruff format --check .
 uv run pytest
 uv run tca site --check
+uv run python -m evals.run_context_eval --verify
 ```
+
+The pinned evaluation contains 30 official-source positives, 30 hard negatives, and 240 noisy room
+observations. Current results are claims about that corpus only: 30/30 positives retained, zero hard
+negative official false positives, 78.50% context reduction, and 60% amortized request reduction in
+the declared five-room/five-consumer request model. These are not population-wide reliability or
+token-saving claims.
 
 The observer and tests are safe to run during shadow mode. `publish`, `identity init`, and
 `identity publish-note` are deliberately unavailable until their gates pass.

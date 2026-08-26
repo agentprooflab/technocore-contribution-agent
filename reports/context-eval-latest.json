@@ -1,0 +1,26 @@
+{
+  "brief_budget_units": 9656,
+  "brief_payload_sha256": "2f8049c78faac41913f6cd58e09cacf5a3673474e3e15560ff3f45a9c96a6301",
+  "claims": {
+    "official_false_positives": 0,
+    "official_recall": "30/30",
+    "scope": "this digest-pinned synthetic and mutated fixture corpus only"
+  },
+  "consumer_context_reduction_basis_points": 7850,
+  "corpus_path": "evals/official_corpus.json",
+  "corpus_sha256": "62d7754fe1c810bd6d24a9c649adc74dd90af84591031b989bd1d6ea08f6db14",
+  "false_negatives": [],
+  "false_positives": [],
+  "fixed_as_of": "2026-08-27T12:00:00+00:00",
+  "negative_cases": 30,
+  "positive_cases": 30,
+  "raw_budget_units": 44902,
+  "request_model": {
+    "amortized_reduction_basis_points": 6000,
+    "baseline_source_requests": 25,
+    "broker_source_plus_consumer_requests": 10,
+    "consumers": 5,
+    "rooms": 5
+  },
+  "schema": "tca-context-eval/v1"
+}

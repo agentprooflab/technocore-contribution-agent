@@ -1,0 +1,11 @@
+{
+  "$id": "https://agentprooflab.github.io/technocore-contribution-agent/schemas/context-coverage-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "technocore-context-coverage/v1"},
+    "sources": {"items": {"type": "object"}, "type": "array"}
+  },
+  "required": ["schema", "sources"],
+  "type": "object"
+}

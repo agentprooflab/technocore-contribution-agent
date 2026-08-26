@@ -1,0 +1,19 @@
+{
+  "$id": "https://agentprooflab.github.io/technocore-contribution-agent/schemas/context-brief-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "as_of": {"type": "string"},
+    "brief_cursor": {"type": "string"},
+    "budget": {"additionalProperties": false, "properties": {"estimated_used": {"minimum": 0, "type": "integer"}, "method": {"const": "canonical-utf8-div3-v1", "type": "string"}, "requested": {"minimum": 1, "type": "integer"}}, "required": ["requested", "estimated_used", "method"], "type": "object"},
+    "consumer_id": {"type": "string"},
+    "coverage": {"items": {"type": "object"}, "type": "array"},
+    "critical_items_remaining": {"minimum": 0, "type": "integer"},
+    "items": {"items": {"$ref": "context-observation-v1.schema.json"}, "type": "array"},
+    "profile_digest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "schema": {"const": "technocore-context-brief/v1", "type": "string"},
+    "suppressed": {"additionalProperties": false, "properties": {"acknowledged": {"minimum": 0, "type": "integer"}, "duplicates": {"minimum": 0, "type": "integer"}, "low_relevance": {"minimum": 0, "type": "integer"}, "over_budget": {"minimum": 0, "type": "integer"}, "quarantined": {"minimum": 0, "type": "integer"}}, "required": ["acknowledged", "duplicates", "low_relevance", "over_budget", "quarantined"], "type": "object"}
+  },
+  "required": ["schema", "as_of", "consumer_id", "profile_digest", "brief_cursor", "budget", "coverage", "items", "critical_items_remaining", "suppressed"],
+  "type": "object"
+}

@@ -1,0 +1,13 @@
+{
+  "$id": "https://agentprooflab.github.io/technocore-contribution-agent/schemas/context-expansion-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "as_of": {"type": "string"},
+    "budget": {"type": "object"},
+    "items": {"items": {"type": "object"}, "type": "array"},
+    "schema": {"const": "technocore-context-expansion/v1"}
+  },
+  "required": ["schema", "as_of", "budget", "items"],
+  "type": "object"
+}

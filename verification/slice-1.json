@@ -1,0 +1,28 @@
+{
+  "checks": [
+    {
+      "denominator": 30,
+      "false_positives": 0,
+      "id": "S1-OFFICIAL-CORPUS",
+      "numerator": 30,
+      "result": "pass",
+      "threshold": "30/30 and 0 false positives"
+    },
+    {
+      "id": "S1-CONTEXT-REDUCTION",
+      "observed_basis_points": 7850,
+      "result": "pass",
+      "threshold_basis_points": 5000
+    },
+    {
+      "id": "S1-REQUEST-MODEL-N5",
+      "observed_basis_points": 6000,
+      "result": "pass",
+      "threshold_basis_points": 5000
+    }
+  ],
+  "input_sha256": "62d7754fe1c810bd6d24a9c649adc74dd90af84591031b989bd1d6ea08f6db14",
+  "result": "pass",
+  "schema": "technocore-verification-result/v1",
+  "slice": 1
+}

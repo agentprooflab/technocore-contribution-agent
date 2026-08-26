@@ -1,0 +1,38 @@
+{
+  "schema": "technocore-brief-shadow-run/v1",
+  "mode": "read-only operational smoke",
+  "start_utc": "2026-08-26T16:40:50.461359+00:00",
+  "end_utc": "2026-08-26T16:40:59.566568+00:00",
+  "implementation": "0.2.0 pre-release worktree",
+  "runs": [
+    {
+      "errors": {},
+      "inserted": {"github": 36, "technocore": 600, "x": 19}
+    },
+    {
+      "errors": {},
+      "inserted": {"github": 0, "technocore": 69, "x": 0}
+    }
+  ],
+  "state_migration": {
+    "legacy_observations_preserved": 11500,
+    "schema_user_version": 2,
+    "integrity_check": "ok",
+    "foreign_key_check_rows": 0,
+    "backup": "~/.local/share/tca/backups/state-pre-0.2.0-20260827.db"
+  },
+  "coverage_after_second_run": {
+    "chat": {"cursor": 321, "observed": 200, "known_missing": 0},
+    "did-key-method": {"cursor": 2142, "observed": 200, "known_missing": 0},
+    "technocore": {"cursor": 385502, "observed": 269, "known_missing": 0}
+  },
+  "external_writes": 0,
+  "signed_writes": 0,
+  "publication_actions_before": 2,
+  "publication_actions_after": 2,
+  "limitations": [
+    "This is a short operational smoke run, not the independent adoption trial.",
+    "Initial tail coverage is complete only for the observed window, not historical room content.",
+    "The external method trace is inferred from the read-only adapters and was not captured by a network namespace."
+  ]
+}

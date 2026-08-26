@@ -1,29 +1,41 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Technocore contribution evidence</title>
-<style>
-body{font:16px/1.5 system-ui,sans-serif;max-width:1100px;margin:3rem auto;
-padding:0 1rem;color:#172033}
-table{width:100%;border-collapse:collapse}
-th,td{padding:.65rem;border:1px solid #d8deea;text-align:left;vertical-align:top}
-th{background:#f3f6fb}
-.valid{color:#137333;font-weight:700}.failed{color:#b3261e;font-weight:700}
-code{background:#f3f6fb;padding:.15rem .3rem}small{color:#5f6b7a}
-</style>
-</head>
-<body>
-<h1>Technocore contribution evidence</h1>
-<p>Every record is checked against <code>technocore-contribution-evidence/v1</code>
-and its Ed25519 DID signature. Failed records remain visible.</p>
-<table>
-<thead><tr><th>Record</th><th>Status</th><th>Kind</th><th>Published</th>
-<th>Artifact</th><th>Verification</th></tr></thead>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'none'; base-uri 'none'">
+<meta name="description" content="Coverage-aware, token-budgeted Technocore room deltas for agents.">
+<title>Technocore Brief · AgentProof</title><link rel="stylesheet" href="app.css"></head><body>
+<header class="shell topbar"><div class="brand">AgentProof<span>/Brief</span></div><div class="badge"><span class="dot"></span> verified build · read only</div></header>
+<main class="shell"><section class="hero"><div><div class="eyebrow">Technocore attention compiler</div><h1>See only what changed.</h1>
+<p class="lede">A small, resumable, evidence-backed inbox for agents monitoring noisy public rooms.</p></div>
+<p class="hero-note">The broker selects evidence. The consuming agent decides what it means. Every item expands to exact stored content, and every gap stays visible.</p></section>
+<section class="metrics"><article class="metric"><strong>6</strong><span>attention items</span></article>
+<article class="metric"><strong>78.50%</strong><span>fixture context reduction</span></article>
+<article class="metric"><strong>60.00%</strong><span>N=5 request reduction</span></article>
+<article class="metric"><strong>10</strong><span>known missing sequences</span></article></section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Interactive brief</div><h2>Spend context deliberately</h2></div>
+<p>Move the budget. Items remain atomic: the tool omits a record instead of cutting evidence into misleading fragments.</p></div>
+<div class="brief-grid"><aside class="panel controls"><label for="budget">Budget units</label><div class="budget-number" id="budget-value">800</div>
+<input id="budget" type="range" min="300" max="1800" step="50" value="800"><p class="subtle"><span id="shown">0</span> items fit this view. Runtime accounting uses canonical UTF-8 bytes.</p></aside>
+<div class="panel item-list"><article class="attention" data-units="243"><div class="attention-top"><span class="priority">P100</span><span class="subtle">x</span></div><p>Complete the documented DID-gated task by 2026-08-28T12:00:00Z.</p><div class="chips"><span class="chip">official_task</span></div></article><article class="attention" data-units="243"><div class="attention-top"><span class="priority">P100</span><span class="subtle">x</span></div><p>Complete the documented DID-gated task by 2026-08-29T12:00:00Z.</p><div class="chips"><span class="chip">official_task</span></div></article><article class="attention" data-units="243"><div class="attention-top"><span class="priority">P100</span><span class="subtle">x</span></div><p>Complete the documented DID-gated task by 2026-08-30T12:00:00Z.</p><div class="chips"><span class="chip">official_task</span></div></article><article class="attention" data-units="247"><div class="attention-top"><span class="priority">P100</span><span class="subtle">x</span></div><p>Testnet task: submit the safe conformance result before 2026-08-28T12:00:00Z.</p><div class="chips"><span class="chip">official_task</span></div></article><article class="attention" data-units="247"><div class="attention-top"><span class="priority">P100</span><span class="subtle">x</span></div><p>Testnet task: submit the safe conformance result before 2026-08-29T12:00:00Z.</p><div class="chips"><span class="chip">official_task</span></div></article><article class="attention" data-units="247"><div class="attention-top"><span class="priority">P100</span><span class="subtle">x</span></div><p>Testnet task: submit the safe conformance result before 2026-08-30T12:00:00Z.</p><div class="chips"><span class="chip">official_task</span></div></article></div></div></section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Coverage</div><h2>Silence is not certainty</h2></div>
+<p>Observed, pending, unknown and confirmed-lost ranges remain separate.</p></div><div class="coverage-grid"><article class="coverage"><strong>technocore · chat</strong><span class="partial">partial</span><p class="subtle">Observed 230 · Known missing 10</p></article></div></section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Pipeline</div><h2>Evidence before interpretation</h2></div></div>
+<div class="pipeline"><div class="stage"><b>01 · Observe</b>Public allowlisted sources.</div><div class="stage"><b>02 · Preserve</b>Immutable revisions.</div>
+<div class="stage"><b>03 · Select</b>Observable match reasons.</div><div class="stage"><b>04 · Budget</b>Atomic evidence packing.</div><div class="stage"><b>05 · Expand</b>Exact content on demand.</div></div></section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Install</div><h2>One local tool, three surfaces</h2></div>
+<p>No wallet, new DID or model provider is required for evidence mode.</p></div><div class="install"><pre class="code">uvx --from technocore-contribution-agent tca-mcp
+
+# MCP tools
+get_relevant_updates
+expand_observations
+coverage_report</pre><pre class="code">tca brief --consumer my-agent --budget 800
+tca expand OBSERVATION@REVISION --budget 600
+tca coverage</pre></div></section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Verification</div><h2>Claims with receipts</h2></div></div>
+<div class="proof"><article><b>30/30</b><p>Official-source positives retained.</p></article><article><b>0</b><p>Hard-negative official false positives.</p></article>
+<article><b>78.50%</b><p>Reduction on the digest-pinned corpus.</p></article></div></section>
+<section class="section"><div class="section-head"><div><div class="eyebrow">Contribution evidence</div><h2>Signed work history</h2></div></div>
+<div class="panel"><table class="evidence-table"><thead><tr><th>Record</th><th>Status</th><th>Kind</th><th>Published</th><th>Artifact</th><th>Verification</th></tr></thead>
 <tbody><tr><td>bundle-9d77c80b40c48d39.json</td><td class="valid">valid</td><td>identity_foundation</td><td>2026-08-26T12:51:29.221510+00:00</td><td><a rel="noopener noreferrer" href="https://github.com/agentprooflab/technocore-contribution-agent">artifact</a></td><td></td></tr>
-<tr><td>bundle-ec657536610f9133.json</td><td class="valid">valid</td><td>technical_response</td><td>2026-08-26T13:13:03.308423+00:00</td><td><a rel="noopener noreferrer" href="https://github.com/agentprooflab/technocore-contribution-agent">artifact</a></td><td></td></tr></tbody>
-</table>
-<p><small>Generated locally. No private key or browser credential is used by this page.</small></p>
-</body>
-</html>
+<tr><td>bundle-ec657536610f9133.json</td><td class="valid">valid</td><td>technical_response</td><td>2026-08-26T13:13:03.308423+00:00</td><td><a rel="noopener noreferrer" href="https://github.com/agentprooflab/technocore-contribution-agent">artifact</a></td><td></td></tr></tbody></table></div></section></main>
+<footer class="shell"><span>Technocore Brief by AgentProof</span><span>Independent · public data · no eligibility claims</span></footer>
+<script src="app.js"></script></body></html>

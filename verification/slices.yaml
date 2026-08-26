@@ -1,0 +1,16 @@
+{
+  "schema": "technocore-verification-gates/v1",
+  "policy": {"all_blocking_gates_are_conjunctive": true, "manual_promotion_gates_are_not_ci_gates": true, "waivers": "forbidden"},
+  "slices": [
+    {
+      "id": "S1",
+      "journey": "brief-expand-acknowledge",
+      "gates": [
+        {"id": "S1-CONTRACT-GOLDEN", "class": "contract", "blocking": true, "command": ["uv", "run", "pytest", "tests/test_context.py", "tests/test_mcp.py"], "metric": "golden_payload_digest_mismatches", "comparator": "equal", "threshold": 0, "report_path": "verification/slice-1.json"},
+        {"id": "S1-SAFETY-NO-SIDE-EFFECTS", "class": "safety", "blocking": true, "command": ["uv", "run", "pytest", "tests/test_context_security.py"], "metric": "content_attributable_io_calls", "comparator": "equal", "threshold": 0, "report_path": "verification/slice-1.json"},
+        {"id": "S1-OFFICIAL-CORPUS", "class": "correctness", "blocking": true, "command": ["uv", "run", "python", "-m", "evals.run_context_eval", "--verify"], "metric": "official_fixture_false_negatives_plus_false_positives", "comparator": "equal", "threshold": 0, "report_path": "verification/slice-1.json"},
+        {"id": "S1-BUDGET", "class": "efficiency", "blocking": true, "command": ["uv", "run", "pytest", "tests/test_context.py", "-k", "budget"], "metric": "budget_overruns", "comparator": "equal", "threshold": 0, "report_path": "verification/slice-1.json"}
+      ]
+    }
+  ]
+}

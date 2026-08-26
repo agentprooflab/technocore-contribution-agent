@@ -12,7 +12,7 @@ from urllib.request import Request, urlopen
 
 from tca.config import Config
 from tca.safety import scan_untrusted
-from tca.state import State, iso_now
+from tca.state import StaleCursorError, State, iso_now
 
 TASK_WORDS = (
     "specific task",
@@ -130,42 +130,107 @@ def _get_json(url: str) -> Any:
         return json.load(response)
 
 
-def _technocore_observations(config: Config) -> list[dict[str, Any]]:
-    items: list[dict[str, Any]] = []
+def _sequence_ranges(sequences: list[int], state: str) -> list[tuple[int, int, str]]:
+    if not sequences:
+        return []
+    values = sorted(set(sequences))
+    ranges: list[tuple[int, int, str]] = []
+    start = previous = values[0]
+    for value in values[1:]:
+        if value != previous + 1:
+            ranges.append((start, previous, state))
+            start = value
+        previous = value
+    ranges.append((start, previous, state))
+    return ranges
+
+
+def _technocore_item(
+    config: Config, room: str, epoch: int, message: dict[str, Any]
+) -> dict[str, Any]:
+    text = str(message.get("text", ""))
+    sequence = int(message["seq"])
+    nonce = message.get("nonce")
+    findings = scan_untrusted(text)
+    external = f"{room}:{sequence}"
+    anchor = f"{room}:{epoch}:{sequence}"
+    suffix = f"?nonce={nonce}" if nonce is not None else ""
+    return {
+        "id": f"technocore:{anchor}",
+        "source": "technocore",
+        "external_id": external,
+        "actor_id": str(message.get("from", "")),
+        "actor_username": str(message.get("from", "")),
+        "kind": "technical_question" if "?" in text else "room_message",
+        "title": text[:180],
+        "body": text,
+        "url": (f"{config.observer.technocore_base_url}/humans#r/{room}/{sequence}{suffix}"),
+        "created_at": message.get("ts"),
+        "observed_at": iso_now(),
+        "authoritative": False,
+        "exposure_class": "restricted" if room.startswith(("p-", "mb-")) else "public",
+        "raw": {
+            **message,
+            "room": room,
+            "local_epoch": epoch,
+            "safety_findings": [finding.code for finding in findings],
+        },
+    }
+
+
+def _observe_technocore(config: Config, state: State) -> int:
+    inserted = 0
     for room in config.observer.rooms:
-        query = urlencode({"format": "json", "limit": 200})
-        payload = _get_json(f"{config.observer.technocore_base_url}/r/{room}?{query}")
-        for message in payload.get("messages", []):
-            text = str(message.get("text", ""))
-            sequence = str(message.get("seq", ""))
-            findings = scan_untrusted(text)
-            kind = "technical_question" if "?" in text else "room_message"
-            external = f"{room}:{sequence}"
-            items.append(
-                {
-                    "id": f"technocore:{external}",
-                    "source": "technocore",
-                    "external_id": external,
-                    "actor_id": str(message.get("from", "")),
-                    "actor_username": str(message.get("from", "")),
-                    "kind": kind,
-                    "title": text[:180],
-                    "body": text,
-                    "url": f"{config.observer.technocore_base_url}/humans#r/{room}/{sequence}",
-                    "created_at": message.get("ts"),
-                    "observed_at": iso_now(),
-                    "authoritative": False,
-                    "raw": {**message, "safety_findings": [finding.code for finding in findings]},
-                }
+        cursor_row = state.source_cursor("technocore", room)
+        cursor = str(cursor_row["cursor"]) if cursor_row and cursor_row["cursor"] else None
+        epoch = int(cursor_row["epoch"]) if cursor_row else 0
+        params: dict[str, Any] = {"format": "json", "limit": 200}
+        if cursor is not None:
+            params["since"] = cursor
+        payload = _get_json(f"{config.observer.technocore_base_url}/r/{room}?{urlencode(params)}")
+        messages = sorted(payload.get("messages", []), key=lambda item: int(item["seq"]))
+        sequences = [int(message["seq"]) for message in messages]
+        reported_last = int(payload.get("last_seq") or 0)
+
+        if cursor is not None and reported_last < int(cursor):
+            state.commit_observation_page(
+                source="technocore",
+                scope=room,
+                epoch=epoch,
+                expected_cursor=cursor,
+                observations=[],
+                coverage_ranges=[],
+                next_cursor=cursor,
+                cursor_state="epoch_ambiguous",
             )
-    return items
+            continue
+
+        coverage = _sequence_ranges(sequences, "observed")
+        if cursor is not None and sequences and sequences[0] > int(cursor) + 1:
+            coverage.append((int(cursor) + 1, sequences[0] - 1, "confirmed_lost"))
+        for left, right in zip(sequences, sequences[1:], strict=False):
+            if right > left + 1:
+                coverage.append((left + 1, right - 1, "unknown_gap"))
+
+        items = [_technocore_item(config, room, epoch, message) for message in messages]
+        next_cursor = str(max(sequences)) if sequences else cursor
+        inserted += state.commit_observation_page(
+            source="technocore",
+            scope=room,
+            epoch=epoch,
+            expected_cursor=cursor,
+            observations=items,
+            coverage_ranges=coverage,
+            next_cursor=next_cursor,
+        )
+    return inserted
 
 
 def observe(config: Config, state: State, github_only: bool = False) -> dict[str, Any]:
     state.ensure_shadow_started()
     sources: list[tuple[str, Any]] = [("github", _github_observations)]
     if not github_only:
-        sources.extend((("x", _x_observations), ("technocore", _technocore_observations)))
+        sources.append(("x", _x_observations))
     inserted: dict[str, int] = {}
     errors: dict[str, str] = {}
     for name, collector in sources:
@@ -182,6 +247,17 @@ def observe(config: Config, state: State, github_only: bool = False) -> dict[str
             TimeoutError,
         ) as exc:
             errors[name] = str(exc)
+    if not github_only:
+        try:
+            inserted["technocore"] = _observe_technocore(config, state)
+        except (
+            RuntimeError,
+            StaleCursorError,
+            HTTPError,
+            URLError,
+            TimeoutError,
+        ) as exc:
+            errors["technocore"] = str(exc)
     report = {"inserted": inserted, "errors": errors, "observed_at": iso_now()}
     state.set_meta("last_observe_report", json.dumps(report, sort_keys=True))
     state.set_meta("last_observe_at", report["observed_at"])

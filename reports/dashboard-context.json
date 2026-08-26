@@ -1,0 +1,166 @@
+{
+  "as_of": "2026-08-27T12:00:00+00:00",
+  "brief_cursor": "brief:v1:2026-08-27T05:09:00+00:00",
+  "budget": {
+    "estimated_used": 1729,
+    "method": "canonical-utf8-div3-v1",
+    "requested": 1800
+  },
+  "consumer_id": "dashboard-demo",
+  "coverage": [
+    {
+      "cursor": "240",
+      "epoch": 0,
+      "known_missing": 10,
+      "observed": 230,
+      "pending_fetch": 0,
+      "ranges": [
+        {
+          "end": 180,
+          "start": 1,
+          "state": "observed"
+        },
+        {
+          "end": 190,
+          "start": 181,
+          "state": "confirmed_lost"
+        },
+        {
+          "end": 240,
+          "start": 191,
+          "state": "observed"
+        }
+      ],
+      "scope": "chat",
+      "source": "technocore",
+      "status": "partial",
+      "unknown_gap": 0
+    }
+  ],
+  "critical_items_remaining": 24,
+  "items": [
+    {
+      "actor": "2062193216074715136",
+      "content_sha256": "0217e534689a52352cf01e584bc4e98060e4c2afe6df9a3c3671410982124ebb",
+      "content_trust": "untrusted",
+      "created_at": "2026-08-27T00:01:00+00:00",
+      "event_id": "x:1001",
+      "evidence_id": "x:1001@22667b4584ee84031d2c0d4834e5f2d232d6b807de3edd0167be8a2efc9f19da",
+      "excerpt": "Complete the documented DID-gated task by 2026-08-28T12:00:00Z.",
+      "excerpt_sha256": "0217e534689a52352cf01e584bc4e98060e4c2afe6df9a3c3671410982124ebb",
+      "expand_ref": "x:1001@22667b4584ee84031d2c0d4834e5f2d232d6b807de3edd0167be8a2efc9f19da",
+      "kind": "official_task",
+      "match_reasons": [
+        "official_task"
+      ],
+      "priority": 100,
+      "revision_digest": "22667b4584ee84031d2c0d4834e5f2d232d6b807de3edd0167be8a2efc9f19da",
+      "source": "x",
+      "source_url": null
+    },
+    {
+      "actor": "2062193216074715136",
+      "content_sha256": "67d620ea6f7d318467d7bb270df544358402bf848d129ce47e3da7cff928498b",
+      "content_trust": "untrusted",
+      "created_at": "2026-08-27T00:02:00+00:00",
+      "event_id": "x:1002",
+      "evidence_id": "x:1002@6e89b16ebbde029df7674ba7d63695eea8aeb9ccaad74d7824fd83c53ead496b",
+      "excerpt": "Complete the documented DID-gated task by 2026-08-29T12:00:00Z.",
+      "excerpt_sha256": "67d620ea6f7d318467d7bb270df544358402bf848d129ce47e3da7cff928498b",
+      "expand_ref": "x:1002@6e89b16ebbde029df7674ba7d63695eea8aeb9ccaad74d7824fd83c53ead496b",
+      "kind": "official_task",
+      "match_reasons": [
+        "official_task"
+      ],
+      "priority": 100,
+      "revision_digest": "6e89b16ebbde029df7674ba7d63695eea8aeb9ccaad74d7824fd83c53ead496b",
+      "source": "x",
+      "source_url": null
+    },
+    {
+      "actor": "2062193216074715136",
+      "content_sha256": "1f938208734da03a40844a55205a2dc2c0f40a9a3bac3b2c53112b6b0370db8e",
+      "content_trust": "untrusted",
+      "created_at": "2026-08-27T00:03:00+00:00",
+      "event_id": "x:1003",
+      "evidence_id": "x:1003@4a865df13c1e31fbad459aae60f4b776e5840780337679243126fa53c439cad6",
+      "excerpt": "Complete the documented DID-gated task by 2026-08-30T12:00:00Z.",
+      "excerpt_sha256": "1f938208734da03a40844a55205a2dc2c0f40a9a3bac3b2c53112b6b0370db8e",
+      "expand_ref": "x:1003@4a865df13c1e31fbad459aae60f4b776e5840780337679243126fa53c439cad6",
+      "kind": "official_task",
+      "match_reasons": [
+        "official_task"
+      ],
+      "priority": 100,
+      "revision_digest": "4a865df13c1e31fbad459aae60f4b776e5840780337679243126fa53c439cad6",
+      "source": "x",
+      "source_url": null
+    },
+    {
+      "actor": "2062193216074715136",
+      "content_sha256": "63ecacca74a46c11dd213e62f4c7dea8215cbaae5a0bca00b1052dad77f112b2",
+      "content_trust": "untrusted",
+      "created_at": "2026-08-27T00:04:00+00:00",
+      "event_id": "x:1004",
+      "evidence_id": "x:1004@548e3d02a7f682c5075b66ba2f073179866f29fae55fdb519a3d5af6c18552a6",
+      "excerpt": "Testnet task: submit the safe conformance result before 2026-08-28T12:00:00Z.",
+      "excerpt_sha256": "63ecacca74a46c11dd213e62f4c7dea8215cbaae5a0bca00b1052dad77f112b2",
+      "expand_ref": "x:1004@548e3d02a7f682c5075b66ba2f073179866f29fae55fdb519a3d5af6c18552a6",
+      "kind": "official_task",
+      "match_reasons": [
+        "official_task"
+      ],
+      "priority": 100,
+      "revision_digest": "548e3d02a7f682c5075b66ba2f073179866f29fae55fdb519a3d5af6c18552a6",
+      "source": "x",
+      "source_url": null
+    },
+    {
+      "actor": "2062193216074715136",
+      "content_sha256": "9fc90ec58f96f9360a95c81c3b0cdb595be41bf0382a88524882251726215650",
+      "content_trust": "untrusted",
+      "created_at": "2026-08-27T00:05:00+00:00",
+      "event_id": "x:1005",
+      "evidence_id": "x:1005@f3781b36dbd28095a04bd89e5ad9c49f77fff4fa37c639c211c13b1356b426c5",
+      "excerpt": "Testnet task: submit the safe conformance result before 2026-08-29T12:00:00Z.",
+      "excerpt_sha256": "9fc90ec58f96f9360a95c81c3b0cdb595be41bf0382a88524882251726215650",
+      "expand_ref": "x:1005@f3781b36dbd28095a04bd89e5ad9c49f77fff4fa37c639c211c13b1356b426c5",
+      "kind": "official_task",
+      "match_reasons": [
+        "official_task"
+      ],
+      "priority": 100,
+      "revision_digest": "f3781b36dbd28095a04bd89e5ad9c49f77fff4fa37c639c211c13b1356b426c5",
+      "source": "x",
+      "source_url": null
+    },
+    {
+      "actor": "2062193216074715136",
+      "content_sha256": "aee8c1379baecef8b6cea24f39934c82ddc9ff6042474c764c463a8bd21b82c8",
+      "content_trust": "untrusted",
+      "created_at": "2026-08-27T00:06:00+00:00",
+      "event_id": "x:1006",
+      "evidence_id": "x:1006@8c2b5d89810d290a568070fdd876f0add6a3a6eb39045905d867c127e80613e2",
+      "excerpt": "Testnet task: submit the safe conformance result before 2026-08-30T12:00:00Z.",
+      "excerpt_sha256": "aee8c1379baecef8b6cea24f39934c82ddc9ff6042474c764c463a8bd21b82c8",
+      "expand_ref": "x:1006@8c2b5d89810d290a568070fdd876f0add6a3a6eb39045905d867c127e80613e2",
+      "kind": "official_task",
+      "match_reasons": [
+        "official_task"
+      ],
+      "priority": 100,
+      "revision_digest": "8c2b5d89810d290a568070fdd876f0add6a3a6eb39045905d867c127e80613e2",
+      "source": "x",
+      "source_url": null
+    }
+  ],
+  "profile_digest": "a6f95f1595c2d5ccdf6ce3e63628082af83a48ed46967bfd1444f495b904b67d",
+  "schema": "technocore-context-brief/v1",
+  "suppressed": {
+    "acknowledged": 0,
+    "duplicates": 232,
+    "low_relevance": 30,
+    "over_budget": 32,
+    "quarantined": 0
+  }
+}

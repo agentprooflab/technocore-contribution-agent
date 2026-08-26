@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 from collections.abc import Iterator
@@ -17,9 +18,9 @@ def iso_now() -> str:
     return utc_now().isoformat()
 
 
-SCHEMA = """
-PRAGMA journal_mode=WAL;
-PRAGMA foreign_keys=ON;
+SCHEMA_VERSION = 2
+
+LEGACY_SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
@@ -74,18 +75,195 @@ CREATE TABLE IF NOT EXISTS nonces (
 );
 """
 
+V2_STATEMENTS = (
+    """CREATE TABLE IF NOT EXISTS observation_revisions (
+        observation_id TEXT NOT NULL REFERENCES observations(id) ON DELETE CASCADE,
+        revision_digest TEXT NOT NULL,
+        material_json TEXT NOT NULL,
+        first_seen_at TEXT NOT NULL,
+        last_seen_at TEXT NOT NULL,
+        exposure_class TEXT NOT NULL DEFAULT 'public',
+        quarantine_reason TEXT,
+        tombstone INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY(observation_id, revision_digest)
+    )""",
+    """CREATE TABLE IF NOT EXISTS observation_heads (
+        observation_id TEXT PRIMARY KEY REFERENCES observations(id) ON DELETE CASCADE,
+        revision_digest TEXT NOT NULL,
+        FOREIGN KEY(observation_id, revision_digest)
+            REFERENCES observation_revisions(observation_id, revision_digest)
+    )""",
+    """CREATE TABLE IF NOT EXISTS source_cursors (
+        source TEXT NOT NULL,
+        scope TEXT NOT NULL,
+        epoch INTEGER NOT NULL DEFAULT 0,
+        cursor TEXT,
+        state TEXT NOT NULL DEFAULT 'active',
+        not_before TEXT,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY(source, scope)
+    )""",
+    """CREATE TABLE IF NOT EXISTS coverage_ranges (
+        source TEXT NOT NULL,
+        scope TEXT NOT NULL,
+        epoch INTEGER NOT NULL,
+        start_value INTEGER NOT NULL,
+        end_value INTEGER NOT NULL,
+        state TEXT NOT NULL CHECK(state IN
+            ('observed', 'pending_fetch', 'unknown_gap', 'confirmed_lost')),
+        recorded_at TEXT NOT NULL,
+        CHECK(start_value <= end_value),
+        PRIMARY KEY(source, scope, epoch, start_value, end_value, state)
+    )""",
+    """CREATE TABLE IF NOT EXISTS acknowledgments (
+        consumer_id TEXT NOT NULL,
+        observation_id TEXT NOT NULL,
+        revision_digest TEXT NOT NULL,
+        acknowledged_at TEXT NOT NULL,
+        PRIMARY KEY(consumer_id, observation_id, revision_digest),
+        FOREIGN KEY(observation_id, revision_digest)
+            REFERENCES observation_revisions(observation_id, revision_digest)
+    )""",
+    """CREATE TABLE IF NOT EXISTS orientation_cache (
+        cache_key TEXT PRIMARY KEY,
+        observation_id TEXT NOT NULL,
+        revision_digest TEXT NOT NULL,
+        coverage_digest TEXT NOT NULL,
+        exposure_class TEXT NOT NULL,
+        model_id TEXT NOT NULL,
+        prompt_digest TEXT NOT NULL,
+        policy_version TEXT NOT NULL,
+        payload_json TEXT NOT NULL,
+        status TEXT NOT NULL CHECK(status IN ('ready', 'failed')),
+        created_at TEXT NOT NULL,
+        last_accessed_at TEXT NOT NULL,
+        hit_count INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY(observation_id, revision_digest)
+            REFERENCES observation_revisions(observation_id, revision_digest)
+    )""",
+    "CREATE INDEX IF NOT EXISTS revisions_last_seen ON observation_revisions(last_seen_at)",
+    "CREATE INDEX IF NOT EXISTS coverage_lookup ON coverage_ranges(source, scope, epoch)",
+    "CREATE INDEX IF NOT EXISTS acknowledgments_consumer ON acknowledgments(consumer_id)",
+)
+
+
+class StaleCursorError(RuntimeError):
+    pass
+
+
+def canonical_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+
+
+def sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _material_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "source": payload["source"],
+        "external_id": payload["external_id"],
+        "actor_id": payload.get("actor_id"),
+        "actor_username": payload.get("actor_username"),
+        "kind": payload["kind"],
+        "title": payload.get("title", ""),
+        "body": payload.get("body", ""),
+        "url": payload.get("url"),
+        "created_at": payload.get("created_at"),
+        "authoritative": int(bool(payload.get("authoritative"))),
+        "raw": payload.get("raw", payload),
+    }
+
 
 class State:
     def __init__(self, path: Path):
         self.path = path.expanduser().resolve()
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as connection:
-            connection.executescript(SCHEMA)
+            connection.execute("PRAGMA journal_mode=WAL")
+            self._migrate(connection)
+
+    def _migrate(self, connection: sqlite3.Connection) -> None:
+        version = int(connection.execute("PRAGMA user_version").fetchone()[0])
+        if version > SCHEMA_VERSION:
+            raise RuntimeError(
+                f"state database schema {version} is newer than supported {SCHEMA_VERSION}"
+            )
+        if version == 0:
+            connection.executescript(LEGACY_SCHEMA)
+            connection.execute("PRAGMA user_version=1")
+            version = 1
+        if version == 1:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                for statement in V2_STATEMENTS:
+                    connection.execute(statement)
+                connection.execute("PRAGMA user_version=2")
+                connection.commit()
+            except Exception:
+                connection.rollback()
+                raise
+        self._backfill_revisions(connection)
+
+    def _backfill_revisions(self, connection: sqlite3.Connection) -> None:
+        rows = connection.execute(
+            """SELECT o.* FROM observations o
+            LEFT JOIN observation_heads h ON h.observation_id = o.id
+            WHERE h.observation_id IS NULL"""
+        ).fetchall()
+        for row in rows:
+            raw = json.loads(row["raw_json"])
+            payload = {**dict(row), "raw": raw, "authoritative": bool(row["authoritative"])}
+            material_json = canonical_json(_material_from_payload(payload))
+            digest = sha256_text(material_json)
+            connection.execute(
+                """INSERT OR IGNORE INTO observation_revisions
+                (observation_id, revision_digest, material_json, first_seen_at, last_seen_at,
+                 exposure_class, quarantine_reason, tombstone)
+                VALUES(?, ?, ?, ?, ?, ?, ?, 0)""",
+                (
+                    row["id"],
+                    digest,
+                    material_json,
+                    row["observed_at"],
+                    row["observed_at"],
+                    self._exposure_class(payload),
+                    self._quarantine_reason(payload),
+                ),
+            )
+            connection.execute(
+                """INSERT OR REPLACE INTO observation_heads
+                (observation_id, revision_digest) VALUES(?, ?)""",
+                (row["id"], digest),
+            )
+
+    @staticmethod
+    def _exposure_class(payload: dict[str, Any]) -> str:
+        explicit = payload.get("exposure_class")
+        if explicit in {"public", "restricted"}:
+            return explicit
+        external = str(payload.get("external_id", ""))
+        if payload.get("source") == "technocore":
+            room = external.split(":", 1)[0]
+            if room.startswith(("p-", "mb-", "e-p-", "mb-p-")):
+                return "restricted"
+        return "public"
+
+    @staticmethod
+    def _quarantine_reason(payload: dict[str, Any]) -> str | None:
+        explicit = payload.get("quarantine_reason")
+        if explicit:
+            return str(explicit)
+        raw = payload.get("raw") or {}
+        findings = raw.get("safety_findings", []) if isinstance(raw, dict) else []
+        return ",".join(sorted(str(item) for item in findings)) or None
 
     @contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:
         connection = sqlite3.connect(self.path)
         connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA foreign_keys=ON")
+        connection.execute("PRAGMA busy_timeout=5000")
         try:
             yield connection
             connection.commit()
@@ -121,7 +299,9 @@ class State:
     def shadow_complete(self, hours: int, now: datetime | None = None) -> bool:
         return self.shadow_remaining(hours, now) == timedelta()
 
-    def upsert_observation(self, item: dict[str, Any]) -> bool:
+    def _upsert_observation(
+        self, connection: sqlite3.Connection, item: dict[str, Any]
+    ) -> tuple[bool, str]:
         payload = {
             "id": item["id"],
             "source": item["source"],
@@ -137,8 +317,23 @@ class State:
             "authoritative": int(bool(item.get("authoritative"))),
             "raw_json": json.dumps(item.get("raw", item), sort_keys=True),
         }
-        with self.connect() as connection:
-            cursor = connection.execute(
+        material_json = canonical_json(_material_from_payload(item))
+        revision_digest = sha256_text(material_json)
+        existing_head = connection.execute(
+            "SELECT revision_digest FROM observation_heads WHERE observation_id = ?",
+            (payload["id"],),
+        ).fetchone()
+        if existing_head and existing_head["revision_digest"] == revision_digest:
+            connection.execute(
+                """UPDATE observation_revisions SET last_seen_at = ?
+                WHERE observation_id = ? AND revision_digest = ?""",
+                (payload["observed_at"], payload["id"], revision_digest),
+            )
+            return False, revision_digest
+
+        logical_inserted = existing_head is None
+        if logical_inserted:
+            connection.execute(
                 """INSERT OR IGNORE INTO observations
                 (id, source, external_id, actor_id, actor_username, kind, title, body, url,
                  created_at, observed_at, authoritative, raw_json)
@@ -146,7 +341,299 @@ class State:
                         :body, :url, :created_at, :observed_at, :authoritative, :raw_json)""",
                 payload,
             )
-        return cursor.rowcount == 1
+        connection.execute(
+            """INSERT OR IGNORE INTO observation_revisions
+            (observation_id, revision_digest, material_json, first_seen_at, last_seen_at,
+             exposure_class, quarantine_reason, tombstone)
+            VALUES(?, ?, ?, ?, ?, ?, ?, 0)""",
+            (
+                payload["id"],
+                revision_digest,
+                material_json,
+                payload["observed_at"],
+                payload["observed_at"],
+                self._exposure_class(item),
+                self._quarantine_reason(item),
+            ),
+        )
+
+        immutable_conflict = bool(existing_head and payload["source"] == "technocore")
+        if immutable_conflict:
+            connection.execute(
+                """UPDATE observation_revisions SET quarantine_reason = 'immutable_conflict'
+                WHERE observation_id = ? AND revision_digest = ?""",
+                (payload["id"], revision_digest),
+            )
+            return True, existing_head["revision_digest"]
+
+        if existing_head:
+            connection.execute(
+                """UPDATE observations SET actor_id=:actor_id, actor_username=:actor_username,
+                kind=:kind, title=:title, body=:body, url=:url, created_at=:created_at,
+                observed_at=:observed_at, authoritative=:authoritative, raw_json=:raw_json
+                WHERE id=:id""",
+                payload,
+            )
+        connection.execute(
+            """INSERT INTO observation_heads(observation_id, revision_digest) VALUES(?, ?)
+            ON CONFLICT(observation_id) DO UPDATE SET revision_digest=excluded.revision_digest""",
+            (payload["id"], revision_digest),
+        )
+        return True, revision_digest
+
+    def upsert_observation(self, item: dict[str, Any]) -> bool:
+        with self.connect() as connection:
+            changed, _ = self._upsert_observation(connection, item)
+        return changed
+
+    def current_observations(self, public_only: bool = False) -> list[sqlite3.Row]:
+        where = "WHERE r.exposure_class = 'public'" if public_only else ""
+        with self.connect() as connection:
+            return list(
+                connection.execute(
+                    f"""SELECT o.*, h.revision_digest, r.exposure_class,
+                r.quarantine_reason, r.tombstone
+                FROM observations o
+                JOIN observation_heads h ON h.observation_id = o.id
+                JOIN observation_revisions r ON r.observation_id = h.observation_id
+                    AND r.revision_digest = h.revision_digest
+                {where}
+                ORDER BY o.observed_at, o.source, o.external_id"""
+                )
+            )
+
+    def current_observation(self, observation_id: str) -> sqlite3.Row:
+        with self.connect() as connection:
+            row = connection.execute(
+                """SELECT o.*, h.revision_digest, r.exposure_class,
+                r.quarantine_reason, r.tombstone
+                FROM observations o
+                JOIN observation_heads h ON h.observation_id = o.id
+                JOIN observation_revisions r ON r.observation_id = h.observation_id
+                    AND r.revision_digest = h.revision_digest
+                WHERE o.id = ?""",
+                (observation_id,),
+            ).fetchone()
+        if not row:
+            raise KeyError(f"unknown observation: {observation_id}")
+        return row
+
+    def observation_revision(self, observation_id: str, revision_digest: str) -> sqlite3.Row:
+        with self.connect() as connection:
+            row = connection.execute(
+                """SELECT * FROM observation_revisions
+                WHERE observation_id = ? AND revision_digest = ?""",
+                (observation_id, revision_digest),
+            ).fetchone()
+        if not row:
+            raise KeyError(f"unknown observation revision: {observation_id}@{revision_digest}")
+        return row
+
+    def source_cursor(self, source: str, scope: str) -> sqlite3.Row | None:
+        with self.connect() as connection:
+            return connection.execute(
+                "SELECT * FROM source_cursors WHERE source = ? AND scope = ?",
+                (source, scope),
+            ).fetchone()
+
+    @staticmethod
+    def _normalize_ranges(ranges: list[tuple[int, int, str]]) -> list[tuple[int, int, str]]:
+        if not ranges:
+            return []
+        priority = {"pending_fetch": 1, "unknown_gap": 2, "confirmed_lost": 3, "observed": 4}
+        boundaries = sorted({value for start, end, _ in ranges for value in (start, end + 1)})
+        pieces: list[tuple[int, int, str]] = []
+        for left, right_exclusive in zip(boundaries, boundaries[1:], strict=False):
+            states = [
+                state
+                for start, end, state in ranges
+                if start <= left and end >= right_exclusive - 1
+            ]
+            if not states:
+                continue
+            state = max(states, key=priority.__getitem__)
+            right = right_exclusive - 1
+            if pieces and pieces[-1][2] == state and pieces[-1][1] + 1 == left:
+                pieces[-1] = (pieces[-1][0], right, state)
+            else:
+                pieces.append((left, right, state))
+        return pieces
+
+    def _replace_coverage_ranges(
+        self,
+        connection: sqlite3.Connection,
+        source: str,
+        scope: str,
+        epoch: int,
+        additions: list[tuple[int, int, str]],
+        recorded_at: str,
+    ) -> None:
+        existing = [
+            (int(row["start_value"]), int(row["end_value"]), str(row["state"]))
+            for row in connection.execute(
+                """SELECT start_value, end_value, state FROM coverage_ranges
+                WHERE source = ? AND scope = ? AND epoch = ?""",
+                (source, scope, epoch),
+            )
+        ]
+        normalized = self._normalize_ranges(existing + additions)
+        connection.execute(
+            "DELETE FROM coverage_ranges WHERE source = ? AND scope = ? AND epoch = ?",
+            (source, scope, epoch),
+        )
+        connection.executemany(
+            """INSERT INTO coverage_ranges
+            (source, scope, epoch, start_value, end_value, state, recorded_at)
+            VALUES(?, ?, ?, ?, ?, ?, ?)""",
+            [
+                (source, scope, epoch, start, end, state, recorded_at)
+                for start, end, state in normalized
+            ],
+        )
+
+    def commit_observation_page(
+        self,
+        *,
+        source: str,
+        scope: str,
+        epoch: int,
+        expected_cursor: str | None,
+        observations: list[dict[str, Any]],
+        coverage_ranges: list[tuple[int, int, str]],
+        next_cursor: str | None,
+        cursor_state: str = "active",
+        not_before: str | None = None,
+    ) -> int:
+        recorded_at = iso_now()
+        with self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT cursor, epoch FROM source_cursors WHERE source = ? AND scope = ?",
+                (source, scope),
+            ).fetchone()
+            current = row["cursor"] if row else None
+            current_epoch = int(row["epoch"]) if row else epoch
+            if current != expected_cursor or current_epoch != epoch:
+                raise StaleCursorError(
+                    f"stale cursor for {source}:{scope}: expected {expected_cursor!r}, "
+                    f"found {current!r} at epoch {current_epoch}"
+                )
+            changed = 0
+            for item in observations:
+                item_changed, _ = self._upsert_observation(connection, item)
+                changed += int(item_changed)
+            self._replace_coverage_ranges(
+                connection, source, scope, epoch, coverage_ranges, recorded_at
+            )
+            connection.execute(
+                """INSERT INTO source_cursors
+                (source, scope, epoch, cursor, state, not_before, updated_at)
+                VALUES(?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(source, scope) DO UPDATE SET epoch=excluded.epoch,
+                cursor=excluded.cursor, state=excluded.state, not_before=excluded.not_before,
+                updated_at=excluded.updated_at""",
+                (source, scope, epoch, next_cursor, cursor_state, not_before, recorded_at),
+            )
+        return changed
+
+    def coverage_rows(self) -> list[sqlite3.Row]:
+        with self.connect() as connection:
+            return list(
+                connection.execute(
+                    "SELECT * FROM coverage_ranges ORDER BY source, scope, epoch, start_value"
+                )
+            )
+
+    def cursors(self) -> list[sqlite3.Row]:
+        with self.connect() as connection:
+            return list(connection.execute("SELECT * FROM source_cursors ORDER BY source, scope"))
+
+    def acknowledge(self, consumer_id: str, items: list[tuple[str, str]]) -> int:
+        acknowledged_at = iso_now()
+        with self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            count = 0
+            for observation_id, digest in items:
+                exists = connection.execute(
+                    """SELECT 1 FROM observation_revisions
+                    WHERE observation_id = ? AND revision_digest = ?""",
+                    (observation_id, digest),
+                ).fetchone()
+                if not exists:
+                    raise KeyError(f"unknown observation revision: {observation_id}@{digest}")
+                cursor = connection.execute(
+                    """INSERT OR IGNORE INTO acknowledgments
+                    (consumer_id, observation_id, revision_digest, acknowledged_at)
+                    VALUES(?, ?, ?, ?)""",
+                    (consumer_id, observation_id, digest, acknowledged_at),
+                )
+                count += cursor.rowcount
+        return count
+
+    def acknowledgments(self, consumer_id: str) -> set[tuple[str, str]]:
+        with self.connect() as connection:
+            return {
+                (str(row["observation_id"]), str(row["revision_digest"]))
+                for row in connection.execute(
+                    """SELECT observation_id, revision_digest FROM acknowledgments
+                    WHERE consumer_id = ?""",
+                    (consumer_id,),
+                )
+            }
+
+    def put_orientation(
+        self,
+        *,
+        cache_key: str,
+        observation_id: str,
+        revision_digest: str,
+        coverage_digest: str,
+        exposure_class: str,
+        model_id: str,
+        prompt_digest: str,
+        policy_version: str,
+        payload: dict[str, Any],
+    ) -> None:
+        now = iso_now()
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO orientation_cache
+                (cache_key, observation_id, revision_digest, coverage_digest, exposure_class,
+                 model_id, prompt_digest, policy_version, payload_json, status, created_at,
+                 last_accessed_at, hit_count)
+                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 'ready', ?, ?, 0)
+                ON CONFLICT(cache_key) DO UPDATE SET payload_json=excluded.payload_json,
+                status='ready', last_accessed_at=excluded.last_accessed_at""",
+                (
+                    cache_key,
+                    observation_id,
+                    revision_digest,
+                    coverage_digest,
+                    exposure_class,
+                    model_id,
+                    prompt_digest,
+                    policy_version,
+                    canonical_json(payload),
+                    now,
+                    now,
+                ),
+            )
+
+    def orientation(self, cache_key: str) -> dict[str, Any] | None:
+        with self.connect() as connection:
+            row = connection.execute(
+                """SELECT payload_json FROM orientation_cache
+                WHERE cache_key = ? AND status = 'ready'""",
+                (cache_key,),
+            ).fetchone()
+            if not row:
+                return None
+            connection.execute(
+                """UPDATE orientation_cache SET hit_count = hit_count + 1,
+                last_accessed_at = ? WHERE cache_key = ?""",
+                (iso_now(), cache_key),
+            )
+        return json.loads(row["payload_json"])
 
     def observations_without_candidates(self) -> list[sqlite3.Row]:
         with self.connect() as connection:
@@ -219,7 +706,15 @@ class State:
         return row
 
     def counts(self) -> dict[str, int]:
-        tables = ("observations", "candidates", "bundles", "actions")
+        tables = (
+            "observations",
+            "observation_revisions",
+            "candidates",
+            "bundles",
+            "actions",
+            "acknowledgments",
+            "coverage_ranges",
+        )
         with self.connect() as connection:
             return {
                 table: int(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0])

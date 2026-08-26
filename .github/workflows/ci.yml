@@ -18,8 +18,13 @@ jobs:
         run: uv sync --frozen
       - name: Lint
         run: uv run ruff check .
+      - name: Formatting
+        run: uv run ruff format --check .
       - name: Test
         run: uv run pytest
+      - name: Verify context evaluation
+        run: uv run python -m evals.run_context_eval --verify
       - name: Verify evidence history is current
         run: uv run tca site --check
-
+      - name: Build release artifacts
+        run: uv build

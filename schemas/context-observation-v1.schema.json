@@ -1,0 +1,24 @@
+{
+  "$id": "https://agentprooflab.github.io/technocore-contribution-agent/schemas/context-observation-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actor": {"type": ["string", "null"]},
+    "content_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "content_trust": {"const": "untrusted", "type": "string"},
+    "created_at": {"type": ["string", "null"]},
+    "event_id": {"minLength": 1, "type": "string"},
+    "evidence_id": {"minLength": 1, "type": "string"},
+    "excerpt": {"type": "string"},
+    "excerpt_sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "expand_ref": {"minLength": 1, "type": "string"},
+    "kind": {"minLength": 1, "type": "string"},
+    "match_reasons": {"items": {"type": "string"}, "type": "array"},
+    "priority": {"maximum": 100, "minimum": 0, "type": "integer"},
+    "revision_digest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+    "source": {"minLength": 1, "type": "string"},
+    "source_url": {"type": ["string", "null"]}
+  },
+  "required": ["event_id", "evidence_id", "revision_digest", "source", "kind", "priority", "match_reasons", "excerpt", "excerpt_sha256", "content_sha256", "content_trust", "expand_ref"],
+  "type": "object"
+}

@@ -1,17 +1,17 @@
 {
-  "artifact_manifest_sha256": "e9007f36416d0683aaa1aba4c514310375554fa33c50bca18b0d183245b4d7e6",
+  "artifact_manifest_sha256": "6f1d140d8a29a18cb564f0d7bbfdfb4cd29de3ad90e2d5f993f3389d123fd382",
   "artifacts": [
     {
       "path": "dist/SHA256SUMS",
-      "sha256": "501e9cb048b513e200615e771f48a219edd3f4321b10bdb05802d90c5657a32a"
+      "sha256": "daeefc4766678721087a6eeab200a08abaa5c0c2481bbf43e5cc9087df512b5d"
     },
     {
       "path": "dist/technocore_contribution_agent-0.2.0-py3-none-any.whl",
-      "sha256": "ae5b7a33aa0bb8aeabf80296ee14fe9766bb165448277395e65970891a627959"
+      "sha256": "85ae8a7890928aed09eae4415a8b25ad5409e8017164999ed30e8b60fdaa20c8"
     },
     {
       "path": "dist/technocore_contribution_agent-0.2.0.tar.gz",
-      "sha256": "b534a46285e0cbd5f233d14fe2587155e0cb6d73493ea90d17752f3ac35044ec"
+      "sha256": "b19f23d6b4d3d778901b2c0a88bb9c725e624ecb20f95884030212423470042a"
     },
     {
       "path": "docs/app.css",
@@ -110,8 +110,8 @@
       "sha256": "4dd39669e41d6497cc242e981692636aeb3abd9a192c930046a68ab942243a9d"
     }
   ],
-  "commit_sha": "c568f4f4992b268c8ae3b3587c1ff69e8901bfa4",
-  "dirty_worktree": true,
+  "commit_sha": "57e7b510074b020c1a2eefe6b760f8422a7bf3ce",
+  "dirty_worktree": false,
   "environment": {
     "implementation": "CPython",
     "platform": "macOS-26.5.1-arm64-arm-64bit",
@@ -127,5 +127,5 @@
   "schema": "technocore-brief-verification-manifest/v1",
   "signature": null,
   "signature_note": "The AgentProof DID signature is added only after local review and explicit approval; CI never receives the key.",
-  "tree_sha": "294b4fc43f9a062aca2b2345e3408f0af433c265"
+  "tree_sha": "757c013ac1d5b34534e61d5e8963e66ea89fec50"
 }

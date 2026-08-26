@@ -15,6 +15,9 @@ tca = "tca.cli:main"
 tca-mcp = "tca.mcp:main"
 
 [dependency-groups]
+build = [
+  "setuptools==80.9.0",
+]
 dev = [
   "jsonschema>=4.23.0",
   "pytest>=8.3.0",
@@ -22,7 +25,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["setuptools>=75"]
+requires = ["setuptools==80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]

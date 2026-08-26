@@ -25,7 +25,12 @@ def sha256_bytes(value: bytes) -> str:
 
 
 def _source_manifest() -> list[dict[str, str]]:
-    paths: set[Path] = {ROOT / "pyproject.toml", ROOT / "uv.lock"}
+    paths: set[Path] = {
+        ROOT / "README.md",
+        ROOT / "LICENSE",
+        ROOT / "pyproject.toml",
+        ROOT / "uv.lock",
+    }
     for pattern in (
         "config/*.toml",
         "tca/*.py",
@@ -33,6 +38,9 @@ def _source_manifest() -> list[dict[str, str]]:
         "evals/*.py",
         "evals/*.json",
         "schemas/*.json",
+        "scripts/*.sh",
+        "scripts/*.py",
+        "launchd/*.template",
         "verification/*.py",
         "verification/slices.yaml",
         "verification/golden-brief-v1.json",
@@ -200,7 +208,12 @@ def dashboard_contract_failures(dashboard: dict[str, Any]) -> list[str]:
 
 
 def _measurement(
-    gate_id: str, evaluation: dict[str, Any], dashboard: dict[str, Any]
+    gate_id: str,
+    evaluation: dict[str, Any],
+    dashboard: dict[str, Any],
+    *,
+    command_exit_code: int,
+    command_stdout: bytes,
 ) -> tuple[int, dict[str, Any]]:
     if gate_id == "S1-CONTRACT-GOLDEN":
         actual = _golden_digest()
@@ -226,6 +239,16 @@ def _measurement(
     if gate_id == "S1-DASHBOARD-CONTRACT":
         failures = dashboard_contract_failures(dashboard)
         return len(failures), {"failures": failures}
+    if gate_id == "S2-RUNTIME-INSTALLER":
+        try:
+            report = json.loads(command_stdout)
+        except json.JSONDecodeError as exc:
+            return max(command_exit_code, 1), {"parse_error": str(exc)}
+        failures = report.get("failures") if isinstance(report, dict) else None
+        probes = report.get("probes") if isinstance(report, dict) else None
+        if not isinstance(failures, list) or not isinstance(probes, list):
+            return max(command_exit_code, 1), {"parse_error": "invalid runtime probe report"}
+        return len(failures), {"schema": report.get("schema"), "probes": probes}
     raise ValueError(f"gate has no measurement implementation: {gate_id}")
 
 
@@ -233,16 +256,24 @@ def run_gates() -> dict[str, Any]:
     from evals.run_context_eval import evaluate
 
     registry = json.loads(REGISTRY_PATH.read_text())
-    gates = registry["slices"][0]["gates"]
     checks = []
-    for gate in gates:
-        result = subprocess.run(gate["command"], cwd=ROOT, capture_output=True, check=False)
-        evaluation, dashboard = evaluate()
-        observed, evidence = _measurement(gate["id"], evaluation, dashboard)
-        metric_passed = compare(observed, gate["comparator"], int(gate["threshold"]))
-        passed = result.returncode == 0 and metric_passed
-        checks.append(
-            {
+    slice_results = []
+    for slice_definition in registry["slices"]:
+        slice_checks = []
+        for gate in slice_definition["gates"]:
+            result = subprocess.run(gate["command"], cwd=ROOT, capture_output=True, check=False)
+            evaluation, dashboard = evaluate()
+            observed, evidence = _measurement(
+                gate["id"],
+                evaluation,
+                dashboard,
+                command_exit_code=result.returncode,
+                command_stdout=result.stdout,
+            )
+            metric_passed = compare(observed, gate["comparator"], int(gate["threshold"]))
+            passed = result.returncode == 0 and metric_passed
+            check = {
+                "slice": slice_definition["id"],
                 "id": gate["id"],
                 "class": gate["class"],
                 "blocking": bool(gate["blocking"]),
@@ -255,11 +286,24 @@ def run_gates() -> dict[str, Any]:
                 "threshold": gate["threshold"],
                 "result": "pass" if passed else "fail",
             }
+            checks.append(check)
+            slice_checks.append(check)
+        blocking_slice_checks = [check for check in slice_checks if check["blocking"]]
+        slice_results.append(
+            {
+                "id": slice_definition["id"],
+                "journey": slice_definition["journey"],
+                "result": (
+                    "pass"
+                    if all(check["result"] == "pass" for check in blocking_slice_checks)
+                    else "fail"
+                ),
+            }
         )
     blocking = [check for check in checks if check["blocking"]]
     return {
-        "schema": "technocore-verification-result/v2",
-        "slice": 1,
+        "schema": "technocore-verification-result/v3",
+        "slices": slice_results,
         "source_manifest_sha256": source_manifest_sha256(),
         "registry_sha256": sha256_bytes(REGISTRY_PATH.read_bytes()),
         "input_sha256": sha256_bytes((ROOT / "evals" / "official_corpus.json").read_bytes()),

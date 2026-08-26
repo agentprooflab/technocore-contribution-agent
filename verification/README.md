@@ -4,6 +4,9 @@
 blocking gate is conjunctive: its command must exit successfully and its measured value must satisfy
 the registered comparator and threshold. `--verify` recomputes and compares the complete report.
 The report pins a deterministic source manifest, fixture digest, commands, measurements, and result.
+It executes every registered vertical slice: S1 covers brief/expand/acknowledge, while S2 covers the
+verified install, launched health, public-only unattended ranking, and full rollback journey. The
+complete multi-slice report remains in `slice-1.json` for compatibility with the 0.2 artifact path.
 
 The contract gate compares a fixed golden brief digest. The side-effect gate executes hostile content
 while instrumenting network, HTTP, subprocess, browser, shell, and Keychain sinks; it records the

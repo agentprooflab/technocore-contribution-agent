@@ -47,10 +47,9 @@ def _collision_for_issue(state: State, issue_number: str) -> bool:
         rf"(?:fix(?:es)?|close(?:s)?|resolve(?:s)?)?\s*#{re.escape(issue_number)}\b",
         re.I,
     )
-    with state.connect() as connection:
-        rows = connection.execute(
-            "SELECT kind, title, body, raw_json FROM observations WHERE kind = 'pull_request'"
-        ).fetchall()
+    rows = [
+        row for row in state.current_observations(public_only=True) if row["kind"] == "pull_request"
+    ]
     return any(
         pull_request_blocks_issue(row) and pattern.search(f"{row['title']}\n{row['body']}")
         for row in rows
@@ -58,11 +57,9 @@ def _collision_for_issue(state: State, issue_number: str) -> bool:
 
 
 def _duplicate_body_count(state: State, body: str) -> int:
-    with state.connect() as connection:
-        row = connection.execute(
-            "SELECT COUNT(*) FROM observations WHERE body = ?", (body,)
-        ).fetchone()
-    return int(row[0])
+    return sum(
+        1 for row in state.current_observations(public_only=True) if str(row["body"]) == body
+    )
 
 
 def classify(row: Any, state: State) -> dict[str, Any]:
@@ -128,13 +125,25 @@ def classify(row: Any, state: State) -> dict[str, Any]:
 
 def rank(state: State, rescore: bool = False) -> dict[str, Any]:
     counts: dict[str, int] = {"ready": 0, "quarantined": 0, "rejected": 0}
-    observations = state.observations() if rescore else state.observations_without_candidates()
+    observations = state.current_observations(public_only=True)
+    public_ids = {str(row["id"]) for row in observations}
+    if not rescore:
+        with state.connect() as connection:
+            existing = {
+                str(row["observation_id"])
+                for row in connection.execute("SELECT observation_id FROM candidates")
+            }
+        observations = [row for row in observations if str(row["id"]) not in existing]
     for observation in observations:
         candidate = classify(observation, state)
         state.add_candidate(candidate)
         counts[candidate["status"]] += 1
     ranked = [dict(row) for row in state.list_candidates()]
-    actionable = [item for item in ranked if item["status"] in {"ready", "quarantined"}]
+    actionable = [
+        item
+        for item in ranked
+        if item["status"] in {"ready", "quarantined"} and str(item["observation_id"]) in public_ids
+    ]
     state.set_meta("last_rank_report", json.dumps(counts, sort_keys=True))
     return {
         "new": counts,

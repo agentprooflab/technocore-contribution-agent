@@ -83,3 +83,41 @@ def test_closed_unmerged_pull_request_does_not_reject_issue(tmp_path) -> None:
     issue = next(item for item in result["candidates"] if item["observation_id"].endswith(":12"))
     assert issue["status"] == "ready"
     assert issue["category"] == "upstream_defect"
+
+
+def test_unattended_ranking_ignores_restricted_observations_and_collisions(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    add(
+        state,
+        id="github:repo:issue:12",
+        source="github",
+        external_id="12",
+        kind="issue",
+        title="Public bug",
+        body="Observed failure with a reproduction",
+        actor_username="contributor",
+        authoritative=False,
+        observed_at="2026-08-27T00:00:00+00:00",
+        source_state="open",
+    )
+    add(
+        state,
+        id="private:pr:13",
+        source="private_source",
+        external_id="13",
+        kind="pull_request",
+        title="Fixes #12",
+        body="private patch details",
+        actor_username="private",
+        authoritative=False,
+        exposure_class="restricted",
+        observed_at="2026-08-27T00:01:00+00:00",
+        source_state="open",
+    )
+
+    result = rank(state)
+
+    assert result["new"] == {"ready": 1, "quarantined": 0, "rejected": 0}
+    assert [item["observation_id"] for item in result["candidates"]] == ["github:repo:issue:12"]
+    assert "private" not in str(result).lower()
+    assert all(row["observation_id"] != "private:pr:13" for row in state.list_candidates())

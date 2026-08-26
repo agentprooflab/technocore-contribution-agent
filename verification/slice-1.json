@@ -19,6 +19,7 @@
       "metric": "golden_payload_digest_mismatches",
       "observed": 0,
       "result": "pass",
+      "slice": "S1",
       "threshold": 0
     },
     {
@@ -39,6 +40,7 @@
       "metric": "content_attributable_io_calls",
       "observed": 0,
       "result": "pass",
+      "slice": "S1",
       "threshold": 0
     },
     {
@@ -70,6 +72,7 @@
       "metric": "official_fixture_false_negatives_plus_false_positives",
       "observed": 0,
       "result": "pass",
+      "slice": "S1",
       "threshold": 0
     },
     {
@@ -92,6 +95,7 @@
       "metric": "budget_overruns",
       "observed": 0,
       "result": "pass",
+      "slice": "S1",
       "threshold": 0
     },
     {
@@ -116,6 +120,7 @@
       "metric": "consumer_context_reduction_basis_points",
       "observed": 5392,
       "result": "pass",
+      "slice": "S1",
       "threshold": 5000
     },
     {
@@ -138,13 +143,138 @@
       "metric": "dashboard_contract_failures",
       "observed": 0,
       "result": "pass",
+      "slice": "S1",
+      "threshold": 0
+    },
+    {
+      "argv": [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "verification.runtime_probe"
+      ],
+      "blocking": true,
+      "class": "safety",
+      "comparator": "equal",
+      "evidence": {
+        "probes": [
+          {
+            "exit_code": 0,
+            "id": "installer-probe-registry-complete",
+            "missing_node_ids": [],
+            "node_id": "verification.runtime_probe:PROBES",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "exit_code": 0,
+            "id": "final-path-health-legacy-rollback",
+            "node_id": "tests/test_installer.py::test_installer_executes_final_runtime_and_rolls_back_after_activation",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "423b1d0e014eb1eab96f4420f7b344c2615be505dd574b756ac884826ca74f2d"
+          },
+          {
+            "exit_code": 0,
+            "id": "fresh-runtime-does-not-reuse-tampered-current",
+            "node_id": "tests/test_installer.py::test_fresh_install_never_executes_or_reuses_tampered_current_runtime",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "423b1d0e014eb1eab96f4420f7b344c2615be505dd574b756ac884826ca74f2d"
+          },
+          {
+            "exit_code": 0,
+            "id": "non-symlink-pointer-refusal",
+            "node_id": "tests/test_installer.py::test_installer_refuses_non_symlink_runtime_pointer",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "423b1d0e014eb1eab96f4420f7b344c2615be505dd574b756ac884826ca74f2d"
+          },
+          {
+            "exit_code": 0,
+            "id": "trusted-parent-symlink-refusal",
+            "node_id": "tests/test_installer.py::test_installer_rejects_symlinked_trusted_parent_before_mutation",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "4d2df7a96ce4a667da3ccf295f2d16c728a65ed0e861a3baa919f7bb469b02b5"
+          },
+          {
+            "exit_code": 0,
+            "id": "trusted-parent-owner-refusal",
+            "node_id": "tests/test_installer.py::test_installer_rejects_wrong_owner_trusted_parent_before_mutation",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "4d2df7a96ce4a667da3ccf295f2d16c728a65ed0e861a3baa919f7bb469b02b5"
+          },
+          {
+            "exit_code": 0,
+            "id": "first-install-registration-without-health-rollback",
+            "node_id": "tests/test_installer.py::test_registration_without_successful_observer_run_rolls_back_first_install",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "423b1d0e014eb1eab96f4420f7b344c2615be505dd574b756ac884826ca74f2d"
+          },
+          {
+            "exit_code": 0,
+            "id": "required-source-and-freshness-health-gate",
+            "node_id": "tests/test_installer.py::test_failed_or_stale_required_source_report_cannot_create_health",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "cf426ab35f3b06fccef8290fde5325d90af130a79da1d1752031518df77c4236"
+          },
+          {
+            "exit_code": 0,
+            "id": "fatal-previous-job-recovery-failure",
+            "node_id": "tests/test_installer.py::test_rollback_surfaces_fatal_error_when_previous_job_cannot_be_restarted",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "423b1d0e014eb1eab96f4420f7b344c2615be505dd574b756ac884826ca74f2d"
+          },
+          {
+            "exit_code": 0,
+            "id": "candidate-bootstrap-failure-restores-previous",
+            "node_id": "tests/test_installer.py::test_candidate_bootstrap_failure_restores_loaded_previous_job_without_false_fatal",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "423b1d0e014eb1eab96f4420f7b344c2615be505dd574b756ac884826ca74f2d"
+          },
+          {
+            "exit_code": 0,
+            "id": "public-only-unattended-ranking",
+            "node_id": "tests/test_ranking.py::test_unattended_ranking_ignores_restricted_observations_and_collisions",
+            "result": "pass",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stdout_sha256": "423b1d0e014eb1eab96f4420f7b344c2615be505dd574b756ac884826ca74f2d"
+          }
+        ],
+        "schema": "technocore-runtime-probe/v1"
+      },
+      "exit_code": 0,
+      "id": "S2-RUNTIME-INSTALLER",
+      "metric": "runtime_installer_probe_failures",
+      "observed": 0,
+      "result": "pass",
+      "slice": "S2",
       "threshold": 0
     }
   ],
   "input_sha256": "1dff2ad26fa1ca6fa9e6b76c05d22bc8e214ba63303b7ffab8d7f88caac67214",
-  "registry_sha256": "702e22b462ec38f4c8f7097a7b107fa2654701e39b745338c586f8824034c89e",
+  "registry_sha256": "0499d2f6a1d823f824b06c2781e0f3d58e556c2db8283fbcbf2147cc22de05a0",
   "result": "pass",
-  "schema": "technocore-verification-result/v2",
-  "slice": 1,
-  "source_manifest_sha256": "c3c112e082b122a74b681d834287400bac5e0604bed3b54ac5ee335897ca2bc7"
+  "schema": "technocore-verification-result/v3",
+  "slices": [
+    {
+      "id": "S1",
+      "journey": "brief-expand-acknowledge",
+      "result": "pass"
+    },
+    {
+      "id": "S2",
+      "journey": "install-observe-health-rollback",
+      "result": "pass"
+    }
+  ],
+  "source_manifest_sha256": "0ff8e652d7c8e0d9107403a81a3bed39d585902e732875ba66b8b803dd8bc168"
 }

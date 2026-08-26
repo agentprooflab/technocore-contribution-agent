@@ -44,8 +44,13 @@ def main() -> None:
         ROOT / "reports",
         ROOT / "docs",
         ROOT / "dist",
+        ROOT / "tca",
+        ROOT / "scripts",
+        ROOT / "launchd",
+        ROOT / "config",
     ]
     paths = [path for group in tracked_groups if group.exists() for path in group.rglob("*")]
+    paths.extend([ROOT / "README.md", ROOT / "LICENSE", ROOT / "pyproject.toml", ROOT / "uv.lock"])
     artifacts = manifest(paths)
     artifact_digest = hashlib.sha256(
         json.dumps(artifacts, separators=(",", ":"), sort_keys=True).encode("utf-8")

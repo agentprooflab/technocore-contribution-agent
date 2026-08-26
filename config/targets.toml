@@ -1,10 +1,10 @@
 [identity]
 keychain_service = "tca.identity"
 keychain_account = "builder-v1"
-github_account = ""
+github_account = "agentprooflab"
 x_account = ""
 github_cli_config_dir = "~/.config/gh-agentproof"
-x_chrome_profile = ""
+x_chrome_profile = "AgentProof"
 
 [observer]
 state_dir = "~/.local/share/tca"

@@ -35,8 +35,9 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Install uv
         run: |
-          python3 -m pip install --user uv
-          echo "$(python3 -m site --user-base)/bin" >> "$GITHUB_PATH"
+          python3 -m venv "$RUNNER_TEMP/uv-installer"
+          "$RUNNER_TEMP/uv-installer/bin/python" -m pip install uv
+          echo "$RUNNER_TEMP/uv-installer/bin" >> "$GITHUB_PATH"
       - name: Sync locked dependencies
         run: uv sync --frozen
       - name: Verify macOS runtime slice

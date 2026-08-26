@@ -3,7 +3,15 @@ import sqlite3
 
 import pytest
 
-from tca.state import LEGACY_SCHEMA, SCHEMA_VERSION, StaleCursorError, State
+from tca.state import (
+    LEGACY_SCHEMA,
+    SCHEMA_VERSION,
+    V2_STATEMENTS,
+    StaleCursorError,
+    State,
+    canonical_json,
+    sha256_text,
+)
 
 
 def observation(**overrides):
@@ -133,3 +141,90 @@ def test_page_commit_normalizes_coverage_and_rejects_stale_cursor(tmp_path) -> N
             coverage_ranges=[],
             next_cursor="110",
         )
+
+
+def test_volatile_raw_metadata_does_not_create_material_revision(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    item = observation(raw={"text": "same", "likeCount": 1})
+    assert state.upsert_observation(item)
+    first = state.current_observation("x:1")["revision_digest"]
+    assert not state.upsert_observation({**item, "raw": {"text": "same", "likeCount": 2}})
+    second = state.current_observation("x:1")["revision_digest"]
+    assert first == second
+
+
+def test_more_restrictive_policy_correction_updates_current_projection(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    item = observation(
+        id="technocore:chat:1",
+        source="technocore",
+        external_id="chat:1",
+        authoritative=False,
+        exposure_class="public",
+    )
+    state.upsert_observation(item)
+    assert state.current_observation(item["id"])["exposure_class"] == "public"
+    assert not state.upsert_observation(
+        {**item, "exposure_class": "restricted", "quarantine_reason": "policy_rescan"}
+    )
+    corrected = state.current_observation(item["id"])
+    assert corrected["exposure_class"] == "restricted"
+    assert corrected["quarantine_reason"] == "policy_rescan"
+    assert state.current_observations(public_only=True) == []
+
+
+def test_v2_migration_collapses_epoch_zero_duplicate_ids(tmp_path) -> None:
+    path = tmp_path / "state.db"
+    connection = sqlite3.connect(path)
+    connection.executescript(LEGACY_SCHEMA)
+    for statement in V2_STATEMENTS:
+        connection.execute(statement)
+    material = canonical_json(
+        {
+            "source": "technocore",
+            "external_id": "chat:7",
+            "actor_id": "did:key:z6Mk",
+            "actor_username": "did:key:z6Mk",
+            "kind": "room_message",
+            "title": "same",
+            "body": "same",
+            "url": None,
+            "created_at": "2026-08-27T00:00:00Z",
+            "authoritative": 0,
+            "raw": {},
+        }
+    )
+    digest = sha256_text(material)
+    for observation_id in ("technocore:chat:7", "technocore:chat:0:7"):
+        connection.execute(
+            """INSERT INTO observations
+            (id, source, external_id, actor_id, actor_username, kind, title, body, url,
+             created_at, observed_at, authoritative, raw_json)
+            VALUES(?, 'technocore', 'chat:7', 'did:key:z6Mk', 'did:key:z6Mk',
+                    'room_message', 'same', 'same', NULL, ?, ?, 0, '{}')""",
+            (observation_id, "2026-08-27T00:00:00Z", "2026-08-27T00:00:01Z"),
+        )
+        connection.execute(
+            """INSERT INTO observation_revisions
+            (observation_id, revision_digest, material_json, first_seen_at, last_seen_at,
+             exposure_class, quarantine_reason, tombstone)
+            VALUES(?, ?, ?, ?, ?, 'public', NULL, 0)""",
+            (
+                observation_id,
+                digest,
+                material,
+                "2026-08-27T00:00:01Z",
+                "2026-08-27T00:00:01Z",
+            ),
+        )
+        connection.execute(
+            "INSERT INTO observation_heads(observation_id, revision_digest) VALUES(?, ?)",
+            (observation_id, digest),
+        )
+    connection.execute("PRAGMA user_version=2")
+    connection.commit()
+    connection.close()
+
+    state = State(path)
+    ids = [row["id"] for row in state.current_observations()]
+    assert ids == ["technocore:chat:7"]

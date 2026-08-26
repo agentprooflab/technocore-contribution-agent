@@ -6,14 +6,15 @@ import json
 import tempfile
 from pathlib import Path
 
-from tca.context import budget_units, build_brief, payload_digest
+from tca.config import OfficialXAccount
+from tca.context import ContextError, budget_units, build_brief, coverage_report, payload_digest
+from tca.observer import _x_posts_to_observations
 from tca.state import State, canonical_json
 
 ROOT = Path(__file__).parents[1]
 CORPUS_PATH = ROOT / "evals" / "official_corpus.json"
 REPORT_PATH = ROOT / "reports" / "context-eval-latest.json"
 DASHBOARD_PATH = ROOT / "reports" / "dashboard-context.json"
-SLICE_PATH = ROOT / "verification" / "slice-1.json"
 
 
 def file_sha256(path: Path) -> str:
@@ -29,56 +30,53 @@ def populate(state: State, corpus: dict) -> tuple[list[str], list[str]]:
     negatives: list[str] = []
     repeat = int(corpus["repeat_each_template"])
     deadlines = corpus["deadlines"]
+    account = OfficialXAccount(username="flop_labs", user_id="2062193216074715136")
     case_number = 0
     for template in corpus["positive_templates"]:
         for repeat_index in range(repeat):
             case_number += 1
             case_id = f"positive-{case_number:03d}"
             positives.append(case_id)
-            state.upsert_observation(
-                {
-                    "id": f"x:{1000 + case_number}",
-                    "source": "x",
-                    "external_id": str(1000 + case_number),
-                    "actor_id": "2062193216074715136",
-                    "actor_username": "flop_labs",
-                    "kind": "official_task",
-                    "title": "Official task",
-                    "body": template.format(
-                        case=case_id,
-                        deadline=deadlines[repeat_index % len(deadlines)],
-                    ),
-                    "authoritative": True,
-                    "created_at": f"2026-08-27T00:{case_number:02d}:00+00:00",
-                    "observed_at": f"2026-08-27T01:{case_number:02d}:00+00:00",
-                    "raw": {"fixture_id": case_id},
-                }
-            )
+            post = {
+                "id": str(1000 + case_number),
+                "authorId": account.user_id,
+                "author": {"username": account.username},
+                "text": template.format(
+                    case=case_id,
+                    deadline=deadlines[repeat_index % len(deadlines)],
+                ),
+                "createdAt": f"2026-08-27T00:{case_number:02d}:00+00:00",
+                "fixture_id": case_id,
+            }
+            for item in _x_posts_to_observations(
+                account,
+                [post],
+                observed_at=f"2026-08-27T01:{case_number:02d}:00+00:00",
+            ):
+                state.upsert_observation(item)
     for template in corpus["negative_templates"]:
         for repeat_index in range(repeat):
             case_number += 1
             negative_number = len(negatives) + 1
             case_id = f"negative-{negative_number:03d}"
             negatives.append(case_id)
-            state.upsert_observation(
-                {
-                    "id": f"x:{1000 + case_number}",
-                    "source": "x",
-                    "external_id": str(1000 + case_number),
-                    "actor_id": f"spoof-{negative_number}",
-                    "actor_username": "flop_labs",
-                    "kind": "announcement",
-                    "title": "Community post",
-                    "body": template.format(
-                        case=case_id,
-                        deadline=deadlines[repeat_index % len(deadlines)],
-                    ),
-                    "authoritative": False,
-                    "created_at": f"2026-08-27T02:{negative_number:02d}:00+00:00",
-                    "observed_at": f"2026-08-27T03:{negative_number:02d}:00+00:00",
-                    "raw": {"fixture_id": case_id},
-                }
-            )
+            post = {
+                "id": str(1000 + case_number),
+                "authorId": f"spoof-{negative_number}",
+                "author": {"username": account.username},
+                "text": template.format(
+                    case=case_id,
+                    deadline=deadlines[repeat_index % len(deadlines)],
+                ),
+                "createdAt": f"2026-08-27T02:{negative_number:02d}:00+00:00",
+                "fixture_id": case_id,
+            }
+            for item in _x_posts_to_observations(
+                account,
+                [post],
+                observed_at=f"2026-08-27T03:{negative_number:02d}:00+00:00",
+            ):
+                state.upsert_observation(item)
     for number in range(int(corpus["noise_messages"])):
         text = (
             "Repeated community greeting with no actionable change."
@@ -116,7 +114,40 @@ def populate(state: State, corpus: dict) -> tuple[list[str], list[str]]:
     return positives, negatives
 
 
-def evaluate() -> tuple[dict, dict, dict]:
+def dashboard_budget_curve(state: State, as_of: str) -> list[dict]:
+    curve: list[dict] = []
+    for budget in range(300, 1801, 50):
+        try:
+            brief = build_brief(
+                state,
+                consumer_id="dashboard-demo",
+                requested_budget=budget,
+                as_of=as_of,
+            )
+        except ContextError as exc:
+            curve.append(
+                {
+                    "budget": budget,
+                    "evidence_ids": [],
+                    "estimated_used": 0,
+                    "critical_items_remaining": 30,
+                    "error": exc.code,
+                }
+            )
+            continue
+        curve.append(
+            {
+                "budget": budget,
+                "evidence_ids": [item["evidence_id"] for item in brief["items"]],
+                "estimated_used": brief["budget"]["estimated_used"],
+                "critical_items_remaining": brief["critical_items_remaining"],
+                "error": None,
+            }
+        )
+    return curve
+
+
+def evaluate() -> tuple[dict, dict]:
     corpus = load_corpus()
     with tempfile.TemporaryDirectory(prefix="tca-context-eval-") as directory:
         state = State(Path(directory) / "state.db")
@@ -141,13 +172,25 @@ def evaluate() -> tuple[dict, dict, dict]:
             for row in observations
         ]
         raw_units = budget_units(raw_payload)
-        brief = build_brief(
-            state,
-            consumer_id="eval-agent",
-            requested_budget=max(raw_units, 50000),
-            as_of=corpus["fixed_as_of"],
-        )
-        official_items = [item for item in brief["items"] if item["priority"] == 100]
+        pages = []
+        continuation = None
+        while True:
+            page = build_brief(
+                state,
+                consumer_id="eval-agent",
+                requested_budget=800,
+                as_of=corpus["fixed_as_of"],
+                continuation=continuation,
+            )
+            pages.append(page)
+            continuation = page["continuation_cursor"]
+            if not continuation:
+                break
+            if len(pages) > 100:
+                raise RuntimeError("brief pagination did not terminate")
+        official_items = [
+            item for page in pages for item in page["items"] if item["priority"] == 100
+        ]
         returned_fixture_ids = set()
         for item in official_items:
             observation_id = item["event_id"]
@@ -155,12 +198,8 @@ def evaluate() -> tuple[dict, dict, dict]:
             returned_fixture_ids.add(json.loads(row["raw_json"])["fixture_id"])
         false_negatives = sorted(set(positives) - returned_fixture_ids)
         false_positives = sorted(returned_fixture_ids.intersection(negatives))
-        brief_units = budget_units(brief)
+        brief_units = sum(budget_units(page) for page in pages)
         consumer_reduction = 1 - (brief_units / raw_units)
-
-        baseline_requests_n5 = 5 * 5
-        broker_requests_n5 = 5 + 5
-        amortized_request_reduction_n5 = 1 - (broker_requests_n5 / baseline_requests_n5)
         report = {
             "schema": "tca-context-eval/v1",
             "corpus_path": "evals/official_corpus.json",
@@ -172,56 +211,14 @@ def evaluate() -> tuple[dict, dict, dict]:
             "false_positives": false_positives,
             "raw_budget_units": raw_units,
             "brief_budget_units": brief_units,
+            "brief_pages_at_800_units": len(pages),
             "consumer_context_reduction_basis_points": round(consumer_reduction * 10000),
-            "request_model": {
-                "rooms": 5,
-                "consumers": 5,
-                "baseline_source_requests": baseline_requests_n5,
-                "broker_source_plus_consumer_requests": broker_requests_n5,
-                "amortized_reduction_basis_points": round(amortized_request_reduction_n5 * 10000),
-            },
-            "brief_payload_sha256": payload_digest(brief),
+            "brief_payload_sha256": payload_digest(pages),
             "claims": {
                 "scope": "this digest-pinned synthetic and mutated fixture corpus only",
                 "official_recall": f"{len(positives) - len(false_negatives)}/{len(positives)}",
                 "official_false_positives": len(false_positives),
             },
-        }
-        passed = (
-            not false_negatives
-            and not false_positives
-            and consumer_reduction >= 0.50
-            and amortized_request_reduction_n5 >= 0.50
-        )
-        slice_report = {
-            "schema": "technocore-verification-result/v1",
-            "slice": 1,
-            "input_sha256": report["corpus_sha256"],
-            "checks": [
-                {
-                    "id": "S1-OFFICIAL-CORPUS",
-                    "numerator": len(positives) - len(false_negatives),
-                    "denominator": len(positives),
-                    "false_positives": len(false_positives),
-                    "threshold": f"{len(positives)}/{len(positives)} and 0 false positives",
-                    "result": "pass" if not false_negatives and not false_positives else "fail",
-                },
-                {
-                    "id": "S1-CONTEXT-REDUCTION",
-                    "observed_basis_points": report["consumer_context_reduction_basis_points"],
-                    "threshold_basis_points": 5000,
-                    "result": "pass" if consumer_reduction >= 0.50 else "fail",
-                },
-                {
-                    "id": "S1-REQUEST-MODEL-N5",
-                    "observed_basis_points": report["request_model"][
-                        "amortized_reduction_basis_points"
-                    ],
-                    "threshold_basis_points": 5000,
-                    "result": "pass" if amortized_request_reduction_n5 >= 0.50 else "fail",
-                },
-            ],
-            "result": "pass" if passed else "fail",
         }
         dashboard = build_brief(
             state,
@@ -229,7 +226,10 @@ def evaluate() -> tuple[dict, dict, dict]:
             requested_budget=1800,
             as_of=corpus["fixed_as_of"],
         )
-        return report, slice_report, dashboard
+        dashboard["coverage"] = coverage_report(state, include_ranges=True)
+        dashboard["snapshot_kind"] = "synthetic_repetition_stress_fixture"
+        dashboard["budget_curve"] = dashboard_budget_curve(state, corpus["fixed_as_of"])
+        return report, dashboard
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -241,23 +241,24 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     args = build_parser().parse_args()
-    report, slice_report, dashboard = evaluate()
+    report, dashboard = evaluate()
     if args.write:
         REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
         REPORT_PATH.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
         DASHBOARD_PATH.write_text(json.dumps(dashboard, indent=2, sort_keys=True) + "\n")
-        SLICE_PATH.write_text(json.dumps(slice_report, indent=2, sort_keys=True) + "\n")
     if args.verify:
-        if not REPORT_PATH.exists() or not SLICE_PATH.exists():
+        if not REPORT_PATH.exists():
             raise SystemExit("verification reports are missing; run with --write")
         if json.loads(REPORT_PATH.read_text()) != report:
             raise SystemExit("context evaluation report does not reproduce")
-        if json.loads(SLICE_PATH.read_text()) != slice_report:
-            raise SystemExit("slice verification report does not reproduce")
         if not DASHBOARD_PATH.exists() or json.loads(DASHBOARD_PATH.read_text()) != dashboard:
             raise SystemExit("dashboard context does not reproduce")
-    print(canonical_json({"report": report, "slice": slice_report}))
-    if slice_report["result"] != "pass":
+    print(canonical_json({"report": report}))
+    if (
+        report["false_negatives"]
+        or report["false_positives"]
+        or report["consumer_context_reduction_basis_points"] < 5000
+    ):
         raise SystemExit(1)
 
 

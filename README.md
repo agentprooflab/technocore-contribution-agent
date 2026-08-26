@@ -58,6 +58,14 @@ Run the read-only stdio MCP server with:
 uv run tca-mcp --consumer my-agent
 ```
 
+After the feature branch is merged, a clean machine can run the read-only server without cloning or
+creating a contribution-agent configuration:
+
+```bash
+uvx --from git+https://github.com/agentprooflab/technocore-contribution-agent.git \
+  tca-mcp --consumer my-agent
+```
+
 It exposes only `get_relevant_updates`, `expand_observations`, and `coverage_report`. It has no
 publish, sign, shell, browser, URL-fetch, raw-file, raw-database, or acknowledgment tool, and its
 startup path does not read the Keychain identity.
@@ -202,9 +210,9 @@ uv run python -m evals.run_context_eval --verify
 
 The pinned evaluation contains 30 official-source positives, 30 hard negatives, and 240 noisy room
 observations. Current results are claims about that corpus only: 30/30 positives retained, zero hard
-negative official false positives, 78.50% context reduction, and 60% amortized request reduction in
-the declared five-room/five-consumer request model. These are not population-wide reliability or
-token-saving claims.
+negative official false positives, with compiler-inclusive context reduction measured across paged
+800-unit briefs. This is a repetition-stress fixture, not a population-wide reliability,
+task-success, or token-saving claim. Request reduction is not claimed until traced workflows exist.
 
 Run the non-mutating full gate with `./scripts/verify.sh`. `./scripts/verify-release.sh` additionally
 builds the wheel and source distribution, installs the wheel into an empty home, exercises MCP, and

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -33,7 +34,24 @@ TOOLS = [
                 },
                 "budget_units": {"type": "integer", "minimum": 1, "maximum": 100000},
                 "as_of": {"type": "string", "maxLength": 64},
+                "continuation": {"type": "string", "maxLength": 2048},
+                "mention_markers": {
+                    "type": "array",
+                    "maxItems": 16,
+                    "items": {"type": "string", "maxLength": 160},
+                },
             },
+        },
+        "outputSchema": {
+            "type": "object",
+            "required": ["schema", "coverage", "items", "budget"],
+            "properties": {"schema": {"const": "technocore-context-brief/v1"}},
+        },
+        "annotations": {
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
         },
     },
     {
@@ -56,11 +74,33 @@ TOOLS = [
                 "budget_units": {"type": "integer", "minimum": 1, "maximum": 100000},
             },
         },
+        "outputSchema": {
+            "type": "object",
+            "required": ["schema", "items", "budget"],
+            "properties": {"schema": {"const": "technocore-context-expansion/v1"}},
+        },
+        "annotations": {
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
     },
     {
         "name": "coverage_report",
         "description": "Report observed, pending, unknown, and confirmed-lost source ranges.",
         "inputSchema": {"type": "object", "additionalProperties": False, "properties": {}},
+        "outputSchema": {
+            "type": "object",
+            "required": ["schema", "sources"],
+            "properties": {"schema": {"const": "technocore-context-coverage/v1"}},
+        },
+        "annotations": {
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
     },
 ]
 
@@ -138,19 +178,35 @@ def call_tool(
     arguments: dict[str, Any],
 ) -> dict[str, Any]:
     if name == "get_relevant_updates":
-        _reject_unknown(arguments, {"interests", "budget_units", "as_of"})
+        _reject_unknown(
+            arguments,
+            {"interests", "budget_units", "as_of", "continuation", "mention_markers"},
+        )
         interests = arguments.get("interests", [])
         if not isinstance(interests, list) or not all(isinstance(item, str) for item in interests):
             raise ContextError("INVALID_ARGUMENTS", "interests must be a string array")
-        budget = arguments.get("budget_units", 800)
-        if not isinstance(budget, int):
-            raise ContextError("INVALID_ARGUMENTS", "budget_units must be an integer")
+        markers = arguments.get("mention_markers", [])
+        if not isinstance(markers, list) or not all(isinstance(item, str) for item in markers):
+            raise ContextError("INVALID_ARGUMENTS", "mention_markers must be a string array")
+        if len(markers) > 16 or any(len(item) > 160 for item in markers):
+            raise ContextError("INVALID_ARGUMENTS", "mention_markers exceed declared bounds")
+        budget = _bounded_budget(arguments.get("budget_units", 800))
+        as_of = arguments.get("as_of")
+        if as_of is not None and (not isinstance(as_of, str) or len(as_of) > 64):
+            raise ContextError("INVALID_ARGUMENTS", "as_of must be a bounded string")
+        continuation = arguments.get("continuation")
+        if continuation is not None and (
+            not isinstance(continuation, str) or len(continuation) > 2048
+        ):
+            raise ContextError("INVALID_ARGUMENTS", "continuation must be a bounded string")
         return build_brief(
             state,
             consumer_id=consumer_id,
             interests=interests,
+            mention_markers=markers,
             requested_budget=budget,
-            as_of=arguments.get("as_of"),
+            as_of=as_of,
+            continuation=continuation,
         )
     if name == "expand_observations":
         _reject_unknown(arguments, {"evidence_ids", "budget_units"})
@@ -159,14 +215,22 @@ def call_tool(
             isinstance(item, str) for item in evidence_ids
         ):
             raise ContextError("INVALID_ARGUMENTS", "evidence_ids must be a string array")
-        budget = arguments.get("budget_units", 800)
-        if not isinstance(budget, int):
-            raise ContextError("INVALID_ARGUMENTS", "budget_units must be an integer")
+        if len(evidence_ids) > 50 or any(len(item) > 512 for item in evidence_ids):
+            raise ContextError("INVALID_ARGUMENTS", "evidence_ids exceed declared bounds")
+        budget = _bounded_budget(arguments.get("budget_units", 800))
         return expand_observations(state, evidence_ids, requested_budget=budget)
     if name == "coverage_report":
         _reject_unknown(arguments, set())
         return {"schema": "technocore-context-coverage/v1", "sources": coverage_report(state)}
     raise ContextError("METHOD_NOT_FOUND", f"unknown read-only tool: {name}")
+
+
+def _bounded_budget(value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ContextError("INVALID_ARGUMENTS", "budget_units must be an integer")
+    if not 1 <= value <= 100000:
+        raise ContextError("INVALID_ARGUMENTS", "budget_units must be between 1 and 100000")
+    return value
 
 
 def handle_request(state: State, consumer_id: str, request: Any) -> dict[str, Any] | None:
@@ -176,9 +240,16 @@ def handle_request(state: State, consumer_id: str, request: Any) -> dict[str, An
     method = request.get("method")
     if request.get("jsonrpc") != "2.0" or not isinstance(method, str):
         return _rpc_error(request_id, -32600, "Invalid Request")
+    is_notification = "id" not in request
     if method == "notifications/initialized":
         return None
     if method == "initialize":
+        params = request.get("params")
+        if not isinstance(params, dict):
+            return _rpc_error(request_id, -32602, "Invalid params")
+        required = {"protocolVersion", "capabilities", "clientInfo"}
+        if not required.issubset(params):
+            return _rpc_error(request_id, -32602, "Invalid params")
         return {
             "jsonrpc": "2.0",
             "id": request_id,
@@ -189,10 +260,16 @@ def handle_request(state: State, consumer_id: str, request: Any) -> dict[str, An
             },
         }
     if method == "ping":
+        if is_notification:
+            return None
         return {"jsonrpc": "2.0", "id": request_id, "result": {}}
     if method == "tools/list":
+        if is_notification:
+            return None
         return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": TOOLS}}
     if method == "tools/call":
+        if is_notification:
+            return None
         params = request.get("params", {})
         if not isinstance(params, dict) or set(params) - {"name", "arguments"}:
             return _rpc_error(request_id, -32602, "Invalid params")
@@ -211,25 +288,39 @@ def handle_request(state: State, consumer_id: str, request: Any) -> dict[str, An
         except ContextError as exc:
             result = _tool_result(exc.payload(), is_error=True)
         return {"jsonrpc": "2.0", "id": request_id, "result": result}
-    return _rpc_error(request_id, -32601, "Method not found")
+    return None if is_notification else _rpc_error(request_id, -32601, "Method not found")
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="tca-mcp")
     parser.add_argument("--config", type=Path)
+    parser.add_argument("--state", type=Path)
     parser.add_argument("--consumer", default="default")
     return parser
 
 
 def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
-    config = load_config(args.config)
-    state = State(config.state_path)
-    for line in sys.stdin:
-        if not line.strip():
+    if args.config:
+        state_path = load_config(args.config).state_path
+    elif args.state:
+        state_path = args.state
+    else:
+        state_path = Path(os.environ.get("TCA_STATE", "~/.local/share/tca/state.db")).expanduser()
+    state = State(state_path)
+    while True:
+        raw = sys.stdin.buffer.readline(MAX_REQUEST_BYTES + 1)
+        if not raw:
+            break
+        if len(raw) > MAX_REQUEST_BYTES:
+            while raw and not raw.endswith(b"\n"):
+                raw = sys.stdin.buffer.readline(MAX_REQUEST_BYTES + 1)
+            response = _rpc_error(None, -32700, "Parse error", "request exceeds one MiB")
+            sys.stdout.write(canonical_json(response) + "\n")
+            sys.stdout.flush()
             continue
         try:
-            request = strict_loads(line)
+            request = strict_loads(raw.decode("utf-8"))
             response = handle_request(state, args.consumer, request)
         except (ValueError, UnicodeError) as exc:
             response = _rpc_error(None, -32700, "Parse error", str(exc))

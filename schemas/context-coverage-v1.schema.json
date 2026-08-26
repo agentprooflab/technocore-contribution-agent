@@ -1,10 +1,29 @@
 {
   "$id": "https://agentprooflab.github.io/technocore-contribution-agent/schemas/context-coverage-v1.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "cursor": {"type": ["string", "null"]},
+        "epoch": {"minimum": 0, "type": "integer"},
+        "known_missing": {"minimum": 0, "type": "integer"},
+        "observed": {"minimum": 0, "type": "integer"},
+        "pending_fetch": {"minimum": 0, "type": "integer"},
+        "ranges": {"items": {"type": "object"}, "type": "array"},
+        "scope": {"type": "string"},
+        "source": {"type": "string"},
+        "status": {"type": "string"},
+        "unknown_gap": {"minimum": 0, "type": "integer"}
+      },
+      "required": ["source", "scope", "epoch", "status", "cursor", "known_missing", "unknown_gap", "pending_fetch", "observed"],
+      "type": "object"
+    }
+  },
   "additionalProperties": false,
   "properties": {
     "schema": {"const": "technocore-context-coverage/v1"},
-    "sources": {"items": {"type": "object"}, "type": "array"}
+    "sources": {"items": {"$ref": "#/$defs/source"}, "type": "array"}
   },
   "required": ["schema", "sources"],
   "type": "object"

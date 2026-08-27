@@ -66,6 +66,13 @@ def test_dashboard_uses_plain_language_editorial_hierarchy_and_motion_fallback(t
     assert "MODEL-NEUTRAL BUDGET UNITS" in rendered
     assert "Only complete evidence objects appear" in rendered
     assert "continuation cursor" in rendered
+    assert "From raw chat<br>to ranked evidence" in rendered
+    assert "Numeric account ID + username must both match" in rendered
+    assert "PRIORITY ≠ TRUTH" in rendered
+    assert "NO LLM IN THE EVIDENCE PATH" in rendered
+    assert "Technocore bodies are withheld automatically" in rendered
+    assert "Expand the proof ID for exact content" in rendered
+    assert 'href="context-broker.md"' in rendered
     assert "Evidence<br>before vibes" in rendered
     assert "Not an indexer. Not a reputation score. Not an eligibility oracle." in rendered
     assert 'src="assets/signal-noise-hero-v1.jpg"' in rendered

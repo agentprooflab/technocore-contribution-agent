@@ -62,6 +62,10 @@ def test_dashboard_uses_plain_language_editorial_hierarchy_and_motion_fallback(t
     rendered = render_site(tmp_path, dashboard, report)
     assert "Stop reading" in rendered
     assert "Turn the<br>firehose down" in rendered
+    assert "This simulates one agent request" in rendered
+    assert "MODEL-NEUTRAL BUDGET UNITS" in rendered
+    assert "Only complete evidence objects appear" in rendered
+    assert "continuation cursor" in rendered
     assert "Evidence<br>before vibes" in rendered
     assert "Not an indexer. Not a reputation score. Not an eligibility oracle." in rendered
     assert 'src="assets/signal-noise-hero-v1.jpg"' in rendered

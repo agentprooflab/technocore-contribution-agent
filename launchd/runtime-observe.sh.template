@@ -1,16 +1,76 @@
 #!/bin/zsh
 set -eu
+umask 077
 
 runtime_root="__RUNTIME_ROOT__"
+runtime_id="__RUNTIME_ID__"
+install_nonce="__INSTALL_NONCE__"
 state_root="$HOME/.local/share/tca"
 export PATH="/opt/homebrew/bin:$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"
 export GH_CONFIG_DIR="$HOME/.config/gh-agentproof"
-mkdir -p "$state_root/logs"
+export PYTHONDONTWRITEBYTECODE=1
+health_root="$state_root/health"
+health_marker="$health_root/$runtime_id.ready"
+health_pending="$health_root/$runtime_id.ready.$$"
+observe_report="$health_root/$runtime_id.observe.$$"
+trap 'rm -f "$health_pending" "$observe_report"' EXIT HUP INT TERM
+mkdir -p "$state_root/logs" "$health_root"
+chmod 700 "$state_root" "$state_root/logs" "$health_root"
+touch "$state_root/logs/observer.log"
+chmod 600 "$state_root/logs/observer.log"
 cd "$runtime_root"
 
 {
   printf '%s observe start\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  "$runtime_root/.venv/bin/tca" observe
-  "$runtime_root/.venv/bin/tca" rank
-  "$runtime_root/.venv/bin/tca" status
+  "$runtime_root/.venv/bin/tca" observe >"$observe_report"
+  chmod 600 "$observe_report"
+  "$runtime_root/.venv/bin/python" - "$observe_report" <<'PY'
+import json
+import sys
+from datetime import datetime, timedelta, timezone
+
+
+def fail(message: str) -> None:
+    raise SystemExit(f"observe health validation failed: {message}")
+
+
+try:
+    with open(sys.argv[1], encoding="utf-8") as handle:
+        report = json.load(handle)
+except (OSError, UnicodeError, json.JSONDecodeError):
+    fail("report is not valid JSON")
+if not isinstance(report, dict):
+    fail("report is not an object")
+if report.get("errors") != {}:
+    fail("one or more required sources failed")
+inserted = report.get("inserted")
+expected = {"github", "x", "technocore"}
+if not isinstance(inserted, dict) or not expected.issubset(inserted):
+    fail("github, x, and technocore outcomes are required")
+if any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in inserted.values()):
+    fail("source outcomes must be non-negative integers")
+observed_at = report.get("observed_at")
+if not isinstance(observed_at, str):
+    fail("observed_at is missing")
+try:
+    observed = datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
+except ValueError:
+    fail("observed_at is invalid")
+if observed.tzinfo is None:
+    fail("observed_at must include a timezone")
+age = datetime.now(timezone.utc) - observed.astimezone(timezone.utc)
+if age < timedelta(minutes=-1) or age > timedelta(minutes=5):
+    fail("observed_at is stale")
+PY
+  "$runtime_root/.venv/bin/tca" rank >/dev/null
+  {
+    printf 'runtime_id=%s\n' "$runtime_id"
+    printf 'install_nonce=%s\n' "$install_nonce"
+    printf 'completed_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  } >"$health_pending"
+  chmod 600 "$health_pending"
+  mv "$health_pending" "$health_marker"
+  rm -f "$observe_report"
+  printf '%s observe healthy\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 } >>"$state_root/logs/observer.log" 2>&1
+trap - EXIT HUP INT TERM

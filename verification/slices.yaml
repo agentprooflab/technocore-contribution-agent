@@ -13,6 +13,13 @@
         ,{"id": "S1-CONTEXT-REDUCTION", "class": "efficiency", "blocking": true, "command": ["uv", "run", "python", "-m", "evals.run_context_eval"], "metric": "consumer_context_reduction_basis_points", "comparator": "greater_than_or_equal", "threshold": 5000, "report_path": "verification/slice-1.json"}
         ,{"id": "S1-DASHBOARD-CONTRACT", "class": "contract", "blocking": true, "command": ["uv", "run", "pytest", "tests/test_context_eval.py", "tests/test_schemas.py", "tests/test_site.py"], "metric": "dashboard_contract_failures", "comparator": "equal", "threshold": 0, "report_path": "verification/slice-1.json"}
       ]
+    },
+    {
+      "id": "S2",
+      "journey": "install-observe-health-rollback",
+      "gates": [
+        {"id": "S2-RUNTIME-INSTALLER", "class": "safety", "blocking": true, "command": ["uv", "run", "python", "-m", "verification.runtime_probe"], "metric": "runtime_installer_probe_failures", "comparator": "equal", "threshold": 0, "report_path": "verification/slice-1.json"}
+      ]
     }
   ]
 }

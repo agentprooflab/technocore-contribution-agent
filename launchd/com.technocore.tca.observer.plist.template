@@ -11,12 +11,16 @@
   </array>
   <key>WorkingDirectory</key>
   <string>__RUNTIME_ROOT__</string>
+  <key>Umask</key>
+  <integer>63</integer>
   <key>EnvironmentVariables</key>
   <dict>
     <key>TCA_CONFIG</key>
     <string>__RUNTIME_ROOT__/config/targets.toml</string>
     <key>TCA_STATE</key>
     <string>__HOME__/.local/share/tca/state.db</string>
+    <key>PYTHONDONTWRITEBYTECODE</key>
+    <string>1</string>
   </dict>
   <key>StartInterval</key>
   <integer>600</integer>

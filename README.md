@@ -88,9 +88,19 @@ not claim to be indexer-neutral yet.
 
 GitHub Actions runs GitHub-only observation every 30 minutes with read-only repository permission.
 For local ten-minute monitoring, review and run `scripts/install-launchd.sh --approve`; the installer
-copies a non-editable runtime and public configuration to `~/.local/share/tca/runtime-0.1.0`, then
-registers the observer. The runtime copy avoids granting a background process access to Documents.
-Re-run the installer after upgrading the project.
+requires a clean committed tree, builds a hash-recorded wheel from that exact commit, installs frozen
+hash-checked runtime and build dependencies, and performs an offline, no-isolation build with the
+exactly pinned backend. Every installation uses a fresh, exclusively created, random-suffixed path
+containing the full commit under `~/.local/share/tca/runtimes/`; an existing runtime is never reused
+as installation authority. The installer verifies a complete runtime-file manifest and activates the new
+`~/.local/share/tca/current` target only after staging succeeds, then waits for a health marker written
+after one successful launched `observe` and public-only `rank` cycle. Health requires fresh, error-free
+GitHub, X, and Technocore outcomes and is bound to a per-install nonce. Any failure through previous-
+target retention restores the prior symlinks, plist, and loaded job; a detectable legacy runtime is
+retained as `previous`. Failure to restart a previously loaded job is reported as a distinct fatal
+recovery error. Trusted parents must be owner-controlled real directories, and runtime directories,
+state, health records, and logs are owner-only. Re-run the installer after committing an upgraded
+reviewed tree.
 
 ## Identity gate
 

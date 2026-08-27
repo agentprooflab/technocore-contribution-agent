@@ -28,3 +28,19 @@ jobs:
         run: uv run tca site --check
       - name: Build release artifacts
         run: uv build
+
+  runtime-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install uv
+        run: |
+          python3 -m venv "$RUNNER_TEMP/uv-installer"
+          "$RUNNER_TEMP/uv-installer/bin/python" -m pip install uv
+          echo "$RUNNER_TEMP/uv-installer/bin" >> "$GITHUB_PATH"
+      - name: Sync locked dependencies
+        run: uv sync --frozen
+      - name: Verify macOS runtime slice
+        run: uv run python -m verification.runtime_probe
+      - name: Reproduce complete verification report
+        run: uv run python -m verification.run --verify

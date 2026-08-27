@@ -9,6 +9,14 @@ from pathlib import Path
 
 from tca.bundles import PrepareOptions, prepare
 from tca.config import Config, load_config
+from tca.context import (
+    ContextError,
+    acknowledge_observations,
+    build_brief,
+    check_collisions,
+    coverage_report,
+    expand_observations,
+)
 from tca.evidence import (
     BINDING_SCHEMA,
     load_record,
@@ -88,6 +96,34 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("status", help="show shadow gate and workflow state")
 
+    brief_parser = sub.add_parser("brief", help="return a token-budgeted attention brief")
+    brief_parser.add_argument("--consumer", default="default")
+    brief_parser.add_argument("--interest", action="append", default=[])
+    brief_parser.add_argument("--mention", action="append", default=[])
+    brief_parser.add_argument("--budget", type=int, default=800)
+    brief_parser.add_argument("--as-of")
+    brief_parser.add_argument(
+        "--since",
+        help="return observations newer than a completed brief:v2 watermark",
+    )
+    brief_parser.add_argument("--continue-from")
+
+    expand_parser = sub.add_parser("expand", help="expand exact evidence revisions")
+    expand_parser.add_argument("evidence", nargs="+")
+    expand_parser.add_argument("--budget", type=int, default=800)
+
+    acknowledge_parser = sub.add_parser(
+        "acknowledge", help="locally acknowledge exact evidence revisions"
+    )
+    acknowledge_parser.add_argument("evidence", nargs="+")
+    acknowledge_parser.add_argument("--consumer", default="default")
+
+    sub.add_parser("coverage", help="show source coverage and known gaps")
+    collisions_parser = sub.add_parser(
+        "collisions", help="check exact duplicate-work and reply references"
+    )
+    collisions_parser.add_argument("target")
+
     site_parser = sub.add_parser("site", help="build or check the static evidence history")
     site_parser.add_argument("--check", action="store_true")
 
@@ -165,9 +201,34 @@ def main(argv: list[str] | None = None) -> None:
                     "counts": state.counts(),
                 }
             )
+        elif args.command == "brief":
+            _json(
+                build_brief(
+                    state,
+                    consumer_id=args.consumer,
+                    interests=args.interest,
+                    mention_markers=args.mention,
+                    requested_budget=args.budget,
+                    as_of=args.as_of,
+                    since=args.since,
+                    continuation=args.continue_from,
+                )
+            )
+        elif args.command == "expand":
+            _json(expand_observations(state, args.evidence, requested_budget=args.budget))
+        elif args.command == "acknowledge":
+            _json(acknowledge_observations(state, args.consumer, args.evidence))
+        elif args.command == "coverage":
+            _json({"schema": "technocore-context-coverage/v1", "sources": coverage_report(state)})
+        elif args.command == "collisions":
+            _json(check_collisions(state, args.target))
         elif args.command == "site":
             ok = build_site(
-                config.publishing.evidence_dir, config.publishing.site_dir, check=args.check
+                config.publishing.evidence_dir,
+                config.publishing.site_dir,
+                context_path=config.project_root / "reports" / "dashboard-context.json",
+                evaluation_path=config.project_root / "reports" / "context-eval-latest.json",
+                check=args.check,
             )
             _json({"ok": ok, "check": args.check, "site": str(config.publishing.site_dir)})
             if not ok:
@@ -200,6 +261,9 @@ def main(argv: list[str] | None = None) -> None:
                 _json({"binding": str(output), "did": identity.did()})
             elif args.identity_command == "publish-note":
                 print(publish_identity_note(config, state, identity, args.approve))
+    except ContextError as exc:
+        _json(exc.payload())
+        raise SystemExit(2) from exc
     except (KeyError, ValueError, RuntimeError, OSError, subprocess.SubprocessError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         raise SystemExit(2) from exc

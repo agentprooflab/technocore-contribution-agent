@@ -1,0 +1,11 @@
+{
+  "$id": "https://agentprooflab.github.io/technocore-contribution-agent/schemas/context-error-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "error": {"additionalProperties": false, "properties": {"code": {"type": "string"}, "details": {"type": "object"}, "message": {"type": "string"}, "retryable": {"type": "boolean"}}, "required": ["code", "message", "retryable", "details"], "type": "object"},
+    "schema": {"const": "technocore-context-error/v1", "type": "string"}
+  },
+  "required": ["schema", "error"],
+  "type": "object"
+}

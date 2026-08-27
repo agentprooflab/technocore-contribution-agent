@@ -1,0 +1,48 @@
+{
+  "$id": "https://agentprooflab.github.io/technocore-contribution-agent/schemas/context-dashboard-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "brief": {"$ref": "context-brief-v1.schema.json"},
+    "budget_curve": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "budget": {"minimum": 1, "type": "integer"},
+          "critical_items_remaining": {"minimum": 0, "type": "integer"},
+          "error": {"type": ["string", "null"]},
+          "estimated_used": {"minimum": 0, "type": "integer"},
+          "evidence_ids": {"items": {"type": "string"}, "type": "array"},
+          "over_budget": {"minimum": 0, "type": "integer"},
+          "payload_sha256": {"pattern": "^[0-9a-f]{64}$", "type": ["string", "null"]}
+        },
+        "required": ["budget", "evidence_ids", "estimated_used", "critical_items_remaining", "over_budget", "payload_sha256", "error"],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "coverage_details": {"items": {"$ref": "context-coverage-v1.schema.json#/$defs/source"}, "type": "array"},
+    "generated_at": {"type": "string"},
+    "metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_name": {"const": "minimal-raw-observation-v1"},
+        "compiled_budget_units": {"minimum": 0, "type": "integer"},
+        "official_false_positives": {"minimum": 0, "type": "integer"},
+        "official_positive_cases": {"minimum": 0, "type": "integer"},
+        "official_recall": {"pattern": "^[0-9]+/[0-9]+$", "type": "string"},
+        "page_budget_units": {"minimum": 1, "type": "integer"},
+        "page_count": {"minimum": 1, "type": "integer"},
+        "raw_budget_units": {"minimum": 1, "type": "integer"},
+        "reduction_basis_points": {"type": "integer"}
+      },
+      "required": ["baseline_name", "raw_budget_units", "compiled_budget_units", "reduction_basis_points", "page_budget_units", "page_count", "official_positive_cases", "official_recall", "official_false_positives"],
+      "type": "object"
+    },
+    "schema": {"const": "technocore-dashboard-envelope/v1"},
+    "snapshot_kind": {"const": "synthetic_contribution_scenarios"}
+  },
+  "required": ["schema", "snapshot_kind", "generated_at", "brief", "budget_curve", "coverage_details", "metrics"],
+  "type": "object"
+}

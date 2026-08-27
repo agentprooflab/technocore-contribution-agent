@@ -1,0 +1,13 @@
+{
+  "$id": "https://agentprooflab.github.io/technocore-contribution-agent/schemas/context-acknowledgment-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "acknowledged": {"minimum": 0, "type": "integer"},
+    "consumer_id": {"type": "string"},
+    "requested": {"minimum": 0, "type": "integer"},
+    "schema": {"const": "technocore-context-acknowledgment/v1"}
+  },
+  "required": ["schema", "consumer_id", "acknowledged", "requested"],
+  "type": "object"
+}

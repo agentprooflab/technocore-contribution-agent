@@ -1,19 +1,22 @@
 [project]
 name = "technocore-contribution-agent"
-version = "0.1.0"
+version = "0.2.0"
 description = "Contribution-first, approval-gated automation for Technocore"
 readme = "README.md"
 requires-python = ">=3.12"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = [
   "cryptography>=45.0.0",
 ]
 
 [project.scripts]
 tca = "tca.cli:main"
+tca-mcp = "tca.mcp:main"
 
 [dependency-groups]
 dev = [
+  "jsonschema>=4.23.0",
   "pytest>=8.3.0",
   "ruff>=0.11.0",
 ]
@@ -26,8 +29,12 @@ build-backend = "setuptools.build_meta"
 where = ["."]
 include = ["tca*"]
 
+[tool.setuptools.data-files]
+"share/technocore-contribution-agent/schemas" = ["schemas/*.json"]
+
 [tool.pytest.ini_options]
 addopts = "-q"
+pythonpath = ["."]
 testpaths = ["tests"]
 
 [tool.ruff]
@@ -36,3 +43,6 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"tca/site.py" = ["E501"]

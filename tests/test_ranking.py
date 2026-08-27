@@ -49,3 +49,37 @@ def test_prompt_injection_question_is_quarantined(tmp_path) -> None:
     )
     result = rank(state)
     assert result["candidates"][0]["status"] == "quarantined"
+
+
+def test_closed_unmerged_pull_request_does_not_reject_issue(tmp_path) -> None:
+    state = State(tmp_path / "state.db")
+    add(
+        state,
+        id="github:repo:issue:12",
+        source="github",
+        external_id="12",
+        kind="issue",
+        title="Bug",
+        body="Observed failure with a reproduction",
+        actor_username="contributor",
+        authoritative=False,
+        observed_at="2026-08-27T00:00:00+00:00",
+        source_state="open",
+    )
+    add(
+        state,
+        id="github:repo:pr:13",
+        source="github",
+        external_id="13",
+        kind="pull_request",
+        title="Fixes #12",
+        body="Closed without merge",
+        actor_username="contributor",
+        authoritative=False,
+        observed_at="2026-08-27T00:01:00+00:00",
+        source_state="closed",
+    )
+    result = rank(state)
+    issue = next(item for item in result["candidates"] if item["observation_id"].endswith(":12"))
+    assert issue["status"] == "ready"
+    assert issue["category"] == "upstream_defect"

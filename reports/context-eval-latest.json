@@ -1,0 +1,35 @@
+{
+  "baseline": {
+    "description": "One canonical record per observation with one content copy and only the source, identity, type, time, and authority fields needed for the task.",
+    "name": "minimal-raw-observation-v1"
+  },
+  "brief_budget_units": 12888,
+  "brief_pages": 17,
+  "brief_payload_sha256": "3de82733c22ad8cf91fd0325c3aba9f9b5e0e6f9b72c74f88487ff88d1ffef45",
+  "budget_integrity_failures": [],
+  "claims": {
+    "official_false_positives": 0,
+    "official_recall": "30/30",
+    "scope": "this digest-pinned synthetic and mutated fixture corpus only"
+  },
+  "consumer_context_reduction_basis_points": 5392,
+  "context_reduction_threshold_basis_points": 5000,
+  "corpus_path": "evals/official_corpus.json",
+  "corpus_sha256": "1dff2ad26fa1ca6fa9e6b76c05d22bc8e214ba63303b7ffab8d7f88caac67214",
+  "false_negatives": [],
+  "false_positives": [],
+  "fixed_as_of": "2026-08-27T12:00:00+00:00",
+  "negative_cases": 30,
+  "negative_envelope_variants": [
+    "homoglyph_username",
+    "missing_actor_id",
+    "missing_username",
+    "wrong_actor_and_username",
+    "wrong_actor_id",
+    "wrong_username"
+  ],
+  "page_budget_units": 800,
+  "positive_cases": 30,
+  "raw_budget_units": 27968,
+  "schema": "tca-context-eval/v1"
+}

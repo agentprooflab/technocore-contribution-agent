@@ -1,5 +1,5 @@
 {
-  "artifact_manifest_sha256": "1b2e2191edf5e57b0b6f9383e349ae5a2c336a9f60e5a3e3a064034d8c89e1da",
+  "artifact_manifest_sha256": "dee92d127e19cc14c61eb54ce3dee4b241c0e35272d9049f19c4a03da01e3fb4",
   "artifacts": [
     {
       "path": ".github/workflows/ci.yml",
@@ -31,15 +31,15 @@
     },
     {
       "path": "dist/SHA256SUMS",
-      "sha256": "5abf4d644d292d06207bf89732e11ee8f5202410e7c87326f58a2312fd8fbe90"
+      "sha256": "21add759bf55e69602cda008787a59ccdd5716a5430ee02067dbedbd1bef155f"
     },
     {
       "path": "dist/technocore_contribution_agent-0.2.0-py3-none-any.whl",
-      "sha256": "70b95adb32ac93e44efd634581a4d847bc5ce517ba0fb0ec69ae31a4b7474c87"
+      "sha256": "53091095fa3b2f0c02630e3654cf9a7fc8f7d653484a43b406fbf4ebc13dedd6"
     },
     {
       "path": "dist/technocore_contribution_agent-0.2.0.tar.gz",
-      "sha256": "d3cd06f164509e8b51f535b8afa7e21e3e366def50d7e6bd93a3745124514c36"
+      "sha256": "e21fbb3f5551cdfcc3e7ddb525b97a4eabcfe742c1ab32c4ed660acfdd65ff3f"
     },
     {
       "path": "docs/app.css",
@@ -59,7 +59,7 @@
     },
     {
       "path": "docs/index.html",
-      "sha256": "2c0e03c8ad5a12dd1c380115c7ae7ee2af95518474799eb7d238e212ad1eefae"
+      "sha256": "cfdec0763bf0a4018215aecc212a0187faf2812c7e231a4b11dfe03d5d08b8c6"
     },
     {
       "path": "docs/schemas/context-acknowledgment-v1.schema.json",
@@ -79,7 +79,7 @@
     },
     {
       "path": "docs/schemas/context-dashboard-v1.schema.json",
-      "sha256": "74aa37edf8a47c31677111e5b31512fa889f2846b92cf971a9c5ecb3d103c5d0"
+      "sha256": "02e111262677255d0c73d54022b4c954ed87fd03541f4ac922e09c0868b0e8de"
     },
     {
       "path": "docs/schemas/context-error-v1.schema.json",
@@ -107,7 +107,7 @@
     },
     {
       "path": "evals/run_context_eval.py",
-      "sha256": "49f8d930c83c06384b3112cd2f37b8aa5edaaf3925c5c664b553f76fa5977dc2"
+      "sha256": "128e474be92cf746fa066206484f10e12e831d98c55eaac1256bc2b1e10a0370"
     },
     {
       "path": "launchd/com.technocore.tca.observer.plist.template",
@@ -127,7 +127,7 @@
     },
     {
       "path": "reports/dashboard-context.json",
-      "sha256": "e6d12a574d862dcb7be93a423229913c8f17161457180141272df142c7ab0749"
+      "sha256": "bc6789ded19d477a8b36e7d715358b99af01631a988cd1362e2a3ba80aeda7cc"
     },
     {
       "path": "reports/landscape-2026-08-27.md",
@@ -155,7 +155,7 @@
     },
     {
       "path": "schemas/context-dashboard-v1.schema.json",
-      "sha256": "74aa37edf8a47c31677111e5b31512fa889f2846b92cf971a9c5ecb3d103c5d0"
+      "sha256": "02e111262677255d0c73d54022b4c954ed87fd03541f4ac922e09c0868b0e8de"
     },
     {
       "path": "schemas/context-error-v1.schema.json",
@@ -247,7 +247,7 @@
     },
     {
       "path": "tca/site.py",
-      "sha256": "f8ffe2d73c225277bbdcdb030afadc70448640c7e568bc84ef7229a196db08da"
+      "sha256": "787c0068fc2eca46e2184a3c920617aed47125ff3cd3c2683734d6e04522b11f"
     },
     {
       "path": "tca/state.py",
@@ -279,14 +279,14 @@
     },
     {
       "path": "verification/slice-1.json",
-      "sha256": "1a6d7a803ce37821263166f3e0747da517a6c6b642c31ddd77defbd7ea78583a"
+      "sha256": "01693471a187fb0dbe89689b1a374098ec0563fe5a6e9d30b6df7c9180bc5930"
     },
     {
       "path": "verification/slices.yaml",
       "sha256": "0499d2f6a1d823f824b06c2781e0f3d58e556c2db8283fbcbf2147cc22de05a0"
     }
   ],
-  "commit_sha": "1dddbc1cafa6db7dab4f937deecd803a4da0bcb3",
+  "commit_sha": "979c9a0bf01ee03205a149af836d679d8d97dc3e",
   "dirty_worktree": false,
   "environment": {
     "implementation": "CPython",
@@ -303,5 +303,5 @@
   "schema": "technocore-brief-verification-manifest/v1",
   "signature": null,
   "signature_note": "The AgentProof DID signature is added only after local review and explicit approval; CI never receives the key.",
-  "tree_sha": "d5983d6d3acbea2d37920e53a12af59fb2081151"
+  "tree_sha": "ae1d414f43d683cca98cc24e2f1f12403d30f8ea"
 }

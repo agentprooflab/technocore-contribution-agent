@@ -133,8 +133,129 @@ def populate(state: State, corpus: dict) -> tuple[list[str], list[str]]:
     return positives, negatives
 
 
+def populate_dashboard_demo(state: State) -> None:
+    """Create varied, explicitly synthetic contribution scenarios for the public demo."""
+    scenarios = [
+        {
+            "id": "x:demo-official-epoch-proof",
+            "source": "x",
+            "external_id": "demo-official-epoch-proof",
+            "actor_id": "2062193216074715136",
+            "actor_username": "flop_labs",
+            "kind": "official_task",
+            "title": "Official task: prove room-epoch recovery",
+            "body": (
+                "OFFICIAL TASK: Publish a public conformance proof for room-epoch recovery by "
+                "2026-08-30 12:00 UTC. Include the failing fixture, passing commit SHA, exact test "
+                "command, and log digest. No wallet or contract interaction."
+            ),
+            "url": "https://x.com/flop_labs/status/demo-official-epoch-proof",
+            "authoritative": True,
+            "created_at": "2026-08-27T06:00:00+00:00",
+            "observed_at": "2026-08-27T06:01:00+00:00",
+        },
+        {
+            "id": "github:technocore-chat:issue:demo-nonce",
+            "source": "github",
+            "external_id": "demo-nonce",
+            "actor_id": "sv",
+            "actor_username": "sv",
+            "kind": "issue",
+            "title": "Maintainer request: make signed-write retries replay-safe",
+            "body": (
+                "Maintainer request: add a crash-recovery test proving that a timed-out signed "
+                "write cannot emit a duplicate nonce. Acceptance requires timeout reconciliation, "
+                "a failing regression test, and no change to the public wire format."
+            ),
+            "url": "https://github.com/flop-labs/technocore-chat/issues/demo-nonce",
+            "authoritative": True,
+            "source_state": "open",
+            "created_at": "2026-08-27T06:10:00+00:00",
+            "observed_at": "2026-08-27T06:11:00+00:00",
+        },
+        {
+            "id": "x:demo-index-guidance",
+            "source": "x",
+            "external_id": "demo-index-guidance",
+            "actor_id": "2062193216074715136",
+            "actor_username": "flop_labs",
+            "kind": "official_announcement",
+            "title": "Ecosystem guidance: improve the selected index",
+            "body": (
+                "Ecosystem guidance: improve the selected Technocore index with automated broken-"
+                "link, archived-repository, license, relevance, and duplicate checks. Do not "
+                "launch another directory."
+            ),
+            "url": "https://x.com/flop_labs/status/demo-index-guidance",
+            "authoritative": True,
+            "created_at": "2026-08-27T06:20:00+00:00",
+            "observed_at": "2026-08-27T06:21:00+00:00",
+        },
+        {
+            "id": "github:technocore-chat:issue:demo-rewind",
+            "source": "github",
+            "external_id": "demo-rewind",
+            "actor_id": "sv",
+            "actor_username": "sv",
+            "kind": "issue",
+            "title": "Maintainer request: recover collection after a sequence rewind",
+            "body": (
+                "Reproduce the sequence-rewind bug that leaves a room permanently ambiguous. A "
+                "valid fix must preserve historical coverage, advance the local epoch exactly "
+                "once, resume collection, and include a stale-cursor race test."
+            ),
+            "url": "https://github.com/flop-labs/technocore-chat/issues/demo-rewind",
+            "authoritative": True,
+            "source_state": "open",
+            "created_at": "2026-08-27T06:30:00+00:00",
+            "observed_at": "2026-08-27T06:31:00+00:00",
+        },
+    ]
+    for scenario in scenarios:
+        state.upsert_observation(scenario)
+    state.commit_observation_page(
+        source="x",
+        scope="official_accounts",
+        epoch=0,
+        expected_cursor=None,
+        observations=[],
+        coverage_ranges=[(1, 2, "observed")],
+        next_cursor="2",
+    )
+    state.commit_observation_page(
+        source="github",
+        scope="flop-labs/technocore-chat",
+        epoch=0,
+        expected_cursor=None,
+        observations=[],
+        coverage_ranges=[(1, 2, "observed")],
+        next_cursor="2",
+    )
+    state.commit_observation_page(
+        source="technocore",
+        scope="chat",
+        epoch=0,
+        expected_cursor=None,
+        observations=[],
+        coverage_ranges=[
+            (1, 98, "observed"),
+            (99, 99, "confirmed_lost"),
+            (100, 150, "observed"),
+        ],
+        next_cursor="150",
+    )
+
+
 def dashboard_budget_curve(state: State, as_of: str) -> list[dict]:
     curve: list[dict] = []
+    complete = build_brief(
+        state,
+        consumer_id="dashboard-demo",
+        requested_budget=100_000,
+        as_of=as_of,
+    )
+    critical_total = sum(1 for item in complete["items"] if item["priority"] == 100)
+    signal_total = len(complete["items"])
     for budget in range(300, 1801, 50):
         try:
             brief = build_brief(
@@ -149,8 +270,8 @@ def dashboard_budget_curve(state: State, as_of: str) -> list[dict]:
                     "budget": budget,
                     "evidence_ids": [],
                     "estimated_used": 0,
-                    "critical_items_remaining": 30,
-                    "over_budget": 30,
+                    "critical_items_remaining": critical_total,
+                    "over_budget": signal_total,
                     "payload_sha256": None,
                     "error": exc.code,
                 }
@@ -217,7 +338,7 @@ def dashboard_envelope(
 ) -> dict:
     envelope = {
         "schema": DASHBOARD_SCHEMA,
-        "snapshot_kind": "synthetic_repetition_stress_fixture",
+        "snapshot_kind": "synthetic_contribution_scenarios",
         "generated_at": report["fixed_as_of"],
         "brief": brief,
         "budget_curve": curve,
@@ -319,16 +440,19 @@ def evaluate() -> tuple[dict, dict]:
                 "official_false_positives": len(false_positives),
             },
         }
+        dashboard_state = State(Path(directory) / "dashboard.db")
+        populate_dashboard_demo(dashboard_state)
+        dashboard_curve = dashboard_budget_curve(dashboard_state, corpus["fixed_as_of"])
         brief = build_brief(
-            state,
+            dashboard_state,
             consumer_id="dashboard-demo",
             requested_budget=1800,
             as_of=corpus["fixed_as_of"],
         )
         dashboard = dashboard_envelope(
             brief,
-            curve,
-            coverage_report(state, include_ranges=True),
+            dashboard_curve,
+            coverage_report(dashboard_state, include_ranges=True),
             report,
         )
         return report, dashboard

@@ -41,7 +41,7 @@
       "type": "object"
     },
     "schema": {"const": "technocore-dashboard-envelope/v1"},
-    "snapshot_kind": {"const": "synthetic_repetition_stress_fixture"}
+    "snapshot_kind": {"const": "synthetic_contribution_scenarios"}
   },
   "required": ["schema", "snapshot_kind", "generated_at", "brief", "budget_curve", "coverage_details", "metrics"],
   "type": "object"

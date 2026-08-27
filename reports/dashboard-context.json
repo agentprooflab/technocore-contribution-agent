@@ -1,38 +1,60 @@
 {
   "brief": {
     "as_of": "2026-08-27T12:00:00+00:00",
-    "brief_cursor": "brief:v2:eyJwcm9maWxlX2RpZ2VzdCI6IjlkZjYzYmZhYzA5ZjFmMDBmZGMwMzJmNGJmZjRjMWYwMThjNzY4YWFkNDJiY2MyYzZiN2NmYmVhNzM4Y2ZhZDYiLCJ2ZXJzaW9uIjoyLCJ3YXRlcm1hcmsiOlsiMjAyNi0wOC0yN1QwNTo1OTowMCswMDowMCIsInRlY2hub2NvcmU6Y2hhdDowOjYwIiwiZThiNzVjNmU1YTAyOTQ1OWFkMzY3YmM5YWVjYmM0NjZiZTQyNzM1ZTUyOTk1Y2U3MDZiOTdlOGNiODlhYjUwNyJdfQ",
+    "brief_cursor": "brief:v2:eyJwcm9maWxlX2RpZ2VzdCI6IjlkZjYzYmZhYzA5ZjFmMDBmZGMwMzJmNGJmZjRjMWYwMThjNzY4YWFkNDJiY2MyYzZiN2NmYmVhNzM4Y2ZhZDYiLCJ2ZXJzaW9uIjoyLCJ3YXRlcm1hcmsiOlsiMjAyNi0wOC0yN1QwNjozMTowMCswMDowMCIsImdpdGh1Yjp0ZWNobm9jb3JlLWNoYXQ6aXNzdWU6ZGVtby1yZXdpbmQiLCIzNmZlYThhNzFhNzNmYzNmYWZhYjQ4ZGYyYzNiYmE3ZWE4ZDA4N2I4ZDMyNmRhYmRjOTI0YmU2MDBmYjMxZGIxIl19",
     "budget": {
-      "estimated_used": 1738,
+      "estimated_used": 1452,
       "method": "canonical-utf8-div3-v1",
       "requested": 1800,
       "scope": "domain_payload_only"
     },
     "consumer_id": "dashboard-demo",
-    "continuation_cursor": "continue:v1:eyJvZmZzZXQiOjcsInByb2ZpbGVfZGlnZXN0IjoiOWRmNjNiZmFjMDlmMWYwMGZkYzAzMmY0YmZmNGMxZjAxOGM3NjhhYWQ0MmJjYzJjNmI3Y2ZiZWE3MzhjZmFkNiIsInNuYXBzaG90X2RpZ2VzdCI6Ijc1NmNhZWU5YzRkYjUzZWQxNGU1Mjc4MDNmYjk4ZGZkMDU4ZGJlNjM5MTA0YTI1M2UyOWM1NjUxYWMyNDBlOGQiLCJ2ZXJzaW9uIjoxfQ",
+    "continuation_cursor": null,
     "coverage": [
       {
-        "cursor": "240",
+        "cursor": "2",
         "epoch": 0,
-        "known_missing": 10,
-        "observed": 230,
+        "known_missing": 0,
+        "observed": 2,
+        "pending_fetch": 0,
+        "scope": "flop-labs/technocore-chat",
+        "source": "github",
+        "status": "complete_for_observed_window",
+        "unknown_gap": 0
+      },
+      {
+        "cursor": "150",
+        "epoch": 0,
+        "known_missing": 1,
+        "observed": 149,
         "pending_fetch": 0,
         "scope": "chat",
         "source": "technocore",
         "status": "partial",
         "unknown_gap": 0
+      },
+      {
+        "cursor": "2",
+        "epoch": 0,
+        "known_missing": 0,
+        "observed": 2,
+        "pending_fetch": 0,
+        "scope": "official_accounts",
+        "source": "x",
+        "status": "complete_for_observed_window",
+        "unknown_gap": 0
       }
     ],
-    "critical_items_remaining": 23,
+    "critical_items_remaining": 0,
     "items": [
       {
         "actor": "2062193216074715136",
-        "content_length": 63,
+        "content_length": 218,
         "content_trust": "untrusted",
-        "created_at": "2026-08-27T00:01:00+00:00",
-        "evidence_id": "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "excerpt": "Complete the documented DID-gated task by 2026-08-28T12:00:00Z.",
-        "excerpt_sha256": "0217e534689a52352cf01e584bc4e98060e4c2afe6df9a3c3671410982124ebb",
+        "created_at": "2026-08-27T06:00:00+00:00",
+        "evidence_id": "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "excerpt": "OFFICIAL TASK: Publish a public conformance proof for room-epoch recovery by 2026-08-30 12:00 UTC. Include the failing fixture, passing commit SHA, exact test command, and log digest. No wallet or contract interaction.",
+        "excerpt_sha256": "38027967ac119c57051836c02c746e572feb73b4e0cb6498337065111780296b",
         "excerpt_status": "complete",
         "kind": "official_task",
         "match_reasons": [
@@ -41,553 +63,493 @@
         "priority": 100,
         "related_evidence_count": 1,
         "source": "x",
-        "source_url": "https://x.com/flop_labs/status/1001"
+        "source_url": "https://x.com/flop_labs/status/demo-official-epoch-proof"
+      },
+      {
+        "actor": "sv",
+        "content_length": 226,
+        "content_trust": "untrusted",
+        "created_at": "2026-08-27T06:10:00+00:00",
+        "evidence_id": "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "excerpt": "Maintainer request: add a crash-recovery test proving that a timed-out signed write cannot emit a duplicate nonce. Acceptance requires timeout reconciliation, a failing regression test, and no change to the public wire format.",
+        "excerpt_sha256": "efa63618dcd4d89949578f7bfa26463c4d26d9777716bd7c14d21ab800d9ab72",
+        "excerpt_status": "complete",
+        "kind": "issue",
+        "match_reasons": [
+          "maintainer_request"
+        ],
+        "priority": 75,
+        "related_evidence_count": 1,
+        "source": "github",
+        "source_url": "https://github.com/flop-labs/technocore-chat/issues/demo-nonce"
+      },
+      {
+        "actor": "sv",
+        "content_length": 217,
+        "content_trust": "untrusted",
+        "created_at": "2026-08-27T06:30:00+00:00",
+        "evidence_id": "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1",
+        "excerpt": "Reproduce the sequence-rewind bug that leaves a room permanently ambiguous. A valid fix must preserve historical coverage, advance the local epoch exactly once, resume collection, and include a stale-cursor race test.",
+        "excerpt_sha256": "f8ac6fcf59708050e5b0dd770d518896767363866aaae11a7f8a65694e02f2b0",
+        "excerpt_status": "complete",
+        "kind": "issue",
+        "match_reasons": [
+          "maintainer_request"
+        ],
+        "priority": 75,
+        "related_evidence_count": 1,
+        "source": "github",
+        "source_url": "https://github.com/flop-labs/technocore-chat/issues/demo-rewind"
       },
       {
         "actor": "2062193216074715136",
-        "content_length": 63,
+        "content_length": 181,
         "content_trust": "untrusted",
-        "created_at": "2026-08-27T00:02:00+00:00",
-        "evidence_id": "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "excerpt": "Complete the documented DID-gated task by 2026-08-29T12:00:00Z.",
-        "excerpt_sha256": "67d620ea6f7d318467d7bb270df544358402bf848d129ce47e3da7cff928498b",
+        "created_at": "2026-08-27T06:20:00+00:00",
+        "evidence_id": "x:demo-index-guidance@143e42d70f4115b99256b7713dee0f23d6b80e0376bec466ad584d0bf23c51c0",
+        "excerpt": "Ecosystem guidance: improve the selected Technocore index with automated broken-link, archived-repository, license, relevance, and duplicate checks. Do not launch another directory.",
+        "excerpt_sha256": "4d4a3631d07453085f129e76e6d6053ea09bdabb5592c8070b5a6dd3024a87cf",
         "excerpt_status": "complete",
-        "kind": "official_task",
+        "kind": "official_announcement",
         "match_reasons": [
-          "official_task"
+          "official_announcement"
         ],
-        "priority": 100,
+        "priority": 70,
         "related_evidence_count": 1,
         "source": "x",
-        "source_url": "https://x.com/flop_labs/status/1002"
-      },
-      {
-        "actor": "2062193216074715136",
-        "content_length": 63,
-        "content_trust": "untrusted",
-        "created_at": "2026-08-27T00:03:00+00:00",
-        "evidence_id": "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "excerpt": "Complete the documented DID-gated task by 2026-08-30T12:00:00Z.",
-        "excerpt_sha256": "1f938208734da03a40844a55205a2dc2c0f40a9a3bac3b2c53112b6b0370db8e",
-        "excerpt_status": "complete",
-        "kind": "official_task",
-        "match_reasons": [
-          "official_task"
-        ],
-        "priority": 100,
-        "related_evidence_count": 1,
-        "source": "x",
-        "source_url": "https://x.com/flop_labs/status/1003"
-      },
-      {
-        "actor": "2062193216074715136",
-        "content_length": 77,
-        "content_trust": "untrusted",
-        "created_at": "2026-08-27T00:04:00+00:00",
-        "evidence_id": "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "excerpt": "Testnet task: submit the safe conformance result before 2026-08-28T12:00:00Z.",
-        "excerpt_sha256": "63ecacca74a46c11dd213e62f4c7dea8215cbaae5a0bca00b1052dad77f112b2",
-        "excerpt_status": "complete",
-        "kind": "official_task",
-        "match_reasons": [
-          "official_task"
-        ],
-        "priority": 100,
-        "related_evidence_count": 1,
-        "source": "x",
-        "source_url": "https://x.com/flop_labs/status/1004"
-      },
-      {
-        "actor": "2062193216074715136",
-        "content_length": 77,
-        "content_trust": "untrusted",
-        "created_at": "2026-08-27T00:05:00+00:00",
-        "evidence_id": "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
-        "excerpt": "Testnet task: submit the safe conformance result before 2026-08-29T12:00:00Z.",
-        "excerpt_sha256": "9fc90ec58f96f9360a95c81c3b0cdb595be41bf0382a88524882251726215650",
-        "excerpt_status": "complete",
-        "kind": "official_task",
-        "match_reasons": [
-          "official_task"
-        ],
-        "priority": 100,
-        "related_evidence_count": 1,
-        "source": "x",
-        "source_url": "https://x.com/flop_labs/status/1005"
-      },
-      {
-        "actor": "2062193216074715136",
-        "content_length": 77,
-        "content_trust": "untrusted",
-        "created_at": "2026-08-27T00:06:00+00:00",
-        "evidence_id": "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a",
-        "excerpt": "Testnet task: submit the safe conformance result before 2026-08-30T12:00:00Z.",
-        "excerpt_sha256": "aee8c1379baecef8b6cea24f39934c82ddc9ff6042474c764c463a8bd21b82c8",
-        "excerpt_status": "complete",
-        "kind": "official_task",
-        "match_reasons": [
-          "official_task"
-        ],
-        "priority": 100,
-        "related_evidence_count": 1,
-        "source": "x",
-        "source_url": "https://x.com/flop_labs/status/1006"
-      },
-      {
-        "actor": "2062193216074715136",
-        "content_length": 76,
-        "content_trust": "untrusted",
-        "created_at": "2026-08-27T00:07:00+00:00",
-        "evidence_id": "x:1007@b64078723a9d5bc47da18bdf558e152f8be1a301b04a0d75a4f7ffced903e16e",
-        "excerpt": "Official contribution task positive-007: publish a reproducible test report.",
-        "excerpt_sha256": "aebcfc20ff8bec194a066458b9f90b0a52b6ddf1752a2ae1c67e979520698654",
-        "excerpt_status": "complete",
-        "kind": "official_task",
-        "match_reasons": [
-          "official_task"
-        ],
-        "priority": 100,
-        "related_evidence_count": 1,
-        "source": "x",
-        "source_url": "https://x.com/flop_labs/status/1007"
+        "source_url": "https://x.com/flop_labs/status/demo-index-guidance"
       }
     ],
     "profile_digest": "9df63bfac09f1f00fdc032f4bff4c1f018c768aad42bcc2c6b7cfbea738cfad6",
     "schema": "technocore-context-brief/v1",
     "suppressed": {
       "acknowledged": 0,
-      "duplicates": 232,
-      "low_relevance": 30,
-      "over_budget": 31,
+      "duplicates": 0,
+      "low_relevance": 0,
+      "over_budget": 0,
       "quarantined": 0
     }
   },
   "budget_curve": [
     {
       "budget": 300,
-      "critical_items_remaining": 30,
+      "critical_items_remaining": 1,
       "error": "BUDGET_TOO_SMALL",
       "estimated_used": 0,
       "evidence_ids": [],
-      "over_budget": 30,
+      "over_budget": 4,
       "payload_sha256": null
     },
     {
       "budget": 350,
-      "critical_items_remaining": 30,
+      "critical_items_remaining": 1,
       "error": "BUDGET_TOO_SMALL",
       "estimated_used": 0,
       "evidence_ids": [],
-      "over_budget": 30,
+      "over_budget": 4,
       "payload_sha256": null
     },
     {
       "budget": 400,
-      "critical_items_remaining": 30,
+      "critical_items_remaining": 1,
       "error": "BUDGET_TOO_SMALL",
       "estimated_used": 0,
       "evidence_ids": [],
-      "over_budget": 30,
+      "over_budget": 4,
       "payload_sha256": null
     },
     {
       "budget": 450,
-      "critical_items_remaining": 30,
+      "critical_items_remaining": 1,
       "error": "BUDGET_TOO_SMALL",
       "estimated_used": 0,
       "evidence_ids": [],
-      "over_budget": 30,
+      "over_budget": 4,
       "payload_sha256": null
     },
     {
       "budget": 500,
-      "critical_items_remaining": 30,
+      "critical_items_remaining": 1,
       "error": "BUDGET_TOO_SMALL",
       "estimated_used": 0,
       "evidence_ids": [],
-      "over_budget": 30,
+      "over_budget": 4,
       "payload_sha256": null
     },
     {
       "budget": 550,
-      "critical_items_remaining": 30,
+      "critical_items_remaining": 1,
       "error": "BUDGET_TOO_SMALL",
       "estimated_used": 0,
       "evidence_ids": [],
-      "over_budget": 30,
+      "over_budget": 4,
       "payload_sha256": null
     },
     {
       "budget": 600,
-      "critical_items_remaining": 29,
-      "error": null,
-      "estimated_used": 599,
-      "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b"
-      ],
-      "over_budget": 37,
-      "payload_sha256": "ef10d622c64bfb2d8042061d9b2b35c9b01574bd36ea94d18e1f673d1fef309f"
+      "critical_items_remaining": 1,
+      "error": "BUDGET_TOO_SMALL",
+      "estimated_used": 0,
+      "evidence_ids": [],
+      "over_budget": 4,
+      "payload_sha256": null
     },
     {
       "budget": 650,
-      "critical_items_remaining": 29,
-      "error": null,
-      "estimated_used": 599,
-      "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b"
-      ],
-      "over_budget": 37,
-      "payload_sha256": "422b398bc405e5d33131e24e0895b5f852533c746472194645657d1b69ad43cc"
+      "critical_items_remaining": 1,
+      "error": "BUDGET_TOO_SMALL",
+      "estimated_used": 0,
+      "evidence_ids": [],
+      "over_budget": 4,
+      "payload_sha256": null
     },
     {
       "budget": 700,
-      "critical_items_remaining": 29,
-      "error": null,
-      "estimated_used": 599,
-      "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b"
-      ],
-      "over_budget": 37,
-      "payload_sha256": "0f4900dff246fbef1d0dc42c775ce1a276658dc214295267e203985eb57d214c"
+      "critical_items_remaining": 1,
+      "error": "BUDGET_TOO_SMALL",
+      "estimated_used": 0,
+      "evidence_ids": [],
+      "over_budget": 4,
+      "payload_sha256": null
     },
     {
       "budget": 750,
-      "critical_items_remaining": 29,
-      "error": null,
-      "estimated_used": 599,
-      "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b"
-      ],
-      "over_budget": 37,
-      "payload_sha256": "412d2a1771a733d0acef7f13b92488c63512f609f951f522e5fcef49b792b415"
+      "critical_items_remaining": 1,
+      "error": "BUDGET_TOO_SMALL",
+      "estimated_used": 0,
+      "evidence_ids": [],
+      "over_budget": 4,
+      "payload_sha256": null
     },
     {
       "budget": 800,
-      "critical_items_remaining": 28,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 786,
+      "estimated_used": 790,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685"
       ],
-      "over_budget": 36,
-      "payload_sha256": "7fc77d14fce23778a477244a05040e1fb681e3dbd248ae5867894c23ac426be5"
+      "over_budget": 3,
+      "payload_sha256": "10b9937591a7912e710cd2fe913e6e55581d6adf9ecb5503cd1d403cc9643e05"
     },
     {
       "budget": 850,
-      "critical_items_remaining": 28,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 786,
+      "estimated_used": 790,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685"
       ],
-      "over_budget": 36,
-      "payload_sha256": "81bad66545d776ff9023fb7e0c99fb3de34829c14648b50b05fcfbc2dd85f2bf"
+      "over_budget": 3,
+      "payload_sha256": "d53a81f5a883b602b84ae5e6772210f5e80d48beea7060e05f7a3cc2ed61eafd"
     },
     {
       "budget": 900,
-      "critical_items_remaining": 28,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 786,
+      "estimated_used": 790,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685"
       ],
-      "over_budget": 36,
-      "payload_sha256": "325ff9b56e0894c4843ad44e0d3afca0a57346179ac41e4cf56c7564f0d0b400"
+      "over_budget": 3,
+      "payload_sha256": "5c5d2a9388284f100d7bc731d3a7d87ddcf9df1377360315ea0c7863228edac3"
     },
     {
       "budget": 950,
-      "critical_items_remaining": 28,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 786,
+      "estimated_used": 790,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685"
       ],
-      "over_budget": 36,
-      "payload_sha256": "09eb95913dd8345db65fe7cc67398b9e21bd48999fbc3dc45d23332b076c1d5f"
+      "over_budget": 3,
+      "payload_sha256": "e3176a647fc4f2b67808136ca3906d710b2b161d182225c17d50e4a2c501b6f8"
     },
     {
       "budget": 1000,
-      "critical_items_remaining": 27,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 973,
+      "estimated_used": 790,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685"
       ],
-      "over_budget": 35,
-      "payload_sha256": "bb87def0ccc13fc877fa0b5d218a0abb15e76c5e17c5328ccf3aac57944e5be8"
+      "over_budget": 3,
+      "payload_sha256": "1555a6e449a8ee68c0864d37b091ab8fa2544a9f8e46d512298185dbb4f59192"
     },
     {
       "budget": 1050,
-      "critical_items_remaining": 27,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 973,
+      "estimated_used": 1047,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953"
       ],
-      "over_budget": 35,
-      "payload_sha256": "aa301d0a7b6e3e8e1af1d7bb9deabded4b375e8ef923a09533200ae0d3cc0a72"
+      "over_budget": 2,
+      "payload_sha256": "38ae4746eff7b754ef46dfaf06f54ef1c94654d6c7c35802e3a628d9afb7f2fb"
     },
     {
       "budget": 1100,
-      "critical_items_remaining": 27,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 973,
+      "estimated_used": 1047,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953"
       ],
-      "over_budget": 35,
-      "payload_sha256": "ca543acc4c5436eac6065166e0e39bb53d9fd1e02e9697aa4876d19e60a1a8a6"
+      "over_budget": 2,
+      "payload_sha256": "5d9bc23b6e300b4f8d6a754e030508ce671089e52248dd6ad8e4fc5a84963a06"
     },
     {
       "budget": 1150,
-      "critical_items_remaining": 27,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 973,
+      "estimated_used": 1047,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953"
       ],
-      "over_budget": 35,
-      "payload_sha256": "ee9abb2c66a204a22da6563801d487c9150bd04ddc5a93aa06cf21d9d3ac5fb9"
+      "over_budget": 2,
+      "payload_sha256": "836429ac9619aa2e4c64e4c2e8129f99228d91aef9537248b3502ad23e35ab42"
     },
     {
       "budget": 1200,
-      "critical_items_remaining": 26,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1164,
+      "estimated_used": 1047,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953"
       ],
-      "over_budget": 34,
-      "payload_sha256": "5953f073192a43217fd1efd8aaca7074815db7f2902bd73728cd5a65b75a9e33"
+      "over_budget": 2,
+      "payload_sha256": "61f2cfe8702c745cb4ab0be0c58835398a19d7e2fda86eaa48f09542acc5f40d"
     },
     {
       "budget": 1250,
-      "critical_items_remaining": 26,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1164,
+      "estimated_used": 1047,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953"
       ],
-      "over_budget": 34,
-      "payload_sha256": "b2853f3814fa73ca7a9c3931b8e61093b0d644906a45448dbe5aa7e1471ef7d5"
+      "over_budget": 2,
+      "payload_sha256": "1e6ed7e1fcf77006db94a6ae0b4fc5e105f4deee61894537bbffc6ecd7bf698e"
     },
     {
       "budget": 1300,
-      "critical_items_remaining": 26,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1164,
+      "estimated_used": 1300,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1"
       ],
-      "over_budget": 34,
-      "payload_sha256": "5029a5ef98d06ad45be1a757c2c410480f50032447ed04b0857c50d8de966937"
+      "over_budget": 1,
+      "payload_sha256": "2e4b44dd4690a86a68f93a3207423f46de01a495afa80d491b83b9771cbb7f50"
     },
     {
       "budget": 1350,
-      "critical_items_remaining": 26,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1164,
+      "estimated_used": 1300,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1"
       ],
-      "over_budget": 34,
-      "payload_sha256": "f4ee7703d3292c2b51c1870b5ac4949d436ac55d121fc17f8ccd99c146c80d12"
+      "over_budget": 1,
+      "payload_sha256": "dcfa2be46e24c82957643abeaea11fd9777a83e5987b651565b2ac9d6c9d37e4"
     },
     {
       "budget": 1400,
-      "critical_items_remaining": 25,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1356,
+      "estimated_used": 1300,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1"
       ],
-      "over_budget": 33,
-      "payload_sha256": "5f236d7640cb7bd773a26879a9d11dfd7838288325a1884bde0e486fb5fdf32f"
+      "over_budget": 1,
+      "payload_sha256": "b790208efb6661486affe5478e3e2407662eb2ea645b0dd04749824455aab286"
     },
     {
       "budget": 1450,
-      "critical_items_remaining": 25,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1356,
+      "estimated_used": 1300,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1"
       ],
-      "over_budget": 33,
-      "payload_sha256": "2ced77a8daadf25d11d7808b83a3e57ba83a83d1ac5da4ebe7c84b819fc0406b"
+      "over_budget": 1,
+      "payload_sha256": "02b36dd15438bee5c06d53a962376a3db52988e910ea85d364241ab3028a30ca"
     },
     {
       "budget": 1500,
-      "critical_items_remaining": 25,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1356,
+      "estimated_used": 1452,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1",
+        "x:demo-index-guidance@143e42d70f4115b99256b7713dee0f23d6b80e0376bec466ad584d0bf23c51c0"
       ],
-      "over_budget": 33,
-      "payload_sha256": "922dd9a5d82d39ef2a643eb521e1a486a750c8939daa3cc2538a319dcbd87ffb"
+      "over_budget": 0,
+      "payload_sha256": "4a22ee3d8a41e053c9c61cf8abe2e23761cd476a1e2b2f61d82542b64a803a27"
     },
     {
       "budget": 1550,
-      "critical_items_remaining": 24,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1547,
+      "estimated_used": 1452,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
-        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1",
+        "x:demo-index-guidance@143e42d70f4115b99256b7713dee0f23d6b80e0376bec466ad584d0bf23c51c0"
       ],
-      "over_budget": 32,
-      "payload_sha256": "bea946fef1fb3ede74c01869a8f97c522dd0cbe8023de71a9b30c1ffcb81b482"
+      "over_budget": 0,
+      "payload_sha256": "da5fb9f892993a61e82e6b8878be401bf6c8979bb6c79f82a9fc62c1add50d19"
     },
     {
       "budget": 1600,
-      "critical_items_remaining": 24,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1547,
+      "estimated_used": 1452,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
-        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1",
+        "x:demo-index-guidance@143e42d70f4115b99256b7713dee0f23d6b80e0376bec466ad584d0bf23c51c0"
       ],
-      "over_budget": 32,
-      "payload_sha256": "73a4bb870601b4a19f7cdef1c3e0520c1b0712b663cca1850eb2c265659372b5"
+      "over_budget": 0,
+      "payload_sha256": "f28357e29e1cb6d2b3a0e96472359c81424b93bc2d9c379dd62130e0fee16c4e"
     },
     {
       "budget": 1650,
-      "critical_items_remaining": 24,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1547,
+      "estimated_used": 1452,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
-        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1",
+        "x:demo-index-guidance@143e42d70f4115b99256b7713dee0f23d6b80e0376bec466ad584d0bf23c51c0"
       ],
-      "over_budget": 32,
-      "payload_sha256": "c601bbb7a35fdc0a77cea813a102f563998da32313eea63d170fc03d8145ba37"
+      "over_budget": 0,
+      "payload_sha256": "3885d519e8dff8d435fd6212ef56cd92f1b84707da13027da754725800c13b78"
     },
     {
       "budget": 1700,
-      "critical_items_remaining": 24,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1547,
+      "estimated_used": 1452,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
-        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1",
+        "x:demo-index-guidance@143e42d70f4115b99256b7713dee0f23d6b80e0376bec466ad584d0bf23c51c0"
       ],
-      "over_budget": 32,
-      "payload_sha256": "c3b91d1f1fc2f3fb13beb8a5ab2677536cc8fcb29267462be8d91d602d8d8f39"
+      "over_budget": 0,
+      "payload_sha256": "0de59a4fdd48a1ce6aefdb081a9d2b598a3f50daebb0122d923a682ba46e789f"
     },
     {
       "budget": 1750,
-      "critical_items_remaining": 23,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1738,
+      "estimated_used": 1452,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
-        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a",
-        "x:1007@b64078723a9d5bc47da18bdf558e152f8be1a301b04a0d75a4f7ffced903e16e"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1",
+        "x:demo-index-guidance@143e42d70f4115b99256b7713dee0f23d6b80e0376bec466ad584d0bf23c51c0"
       ],
-      "over_budget": 31,
-      "payload_sha256": "2d1d43c446368f193df213634aec1e55089041001dc9dce9e4057f8cf237e685"
+      "over_budget": 0,
+      "payload_sha256": "fcf45419cb925d4657ea7688075c58693375b9bf7f44c5f1246f672eed762502"
     },
     {
       "budget": 1800,
-      "critical_items_remaining": 23,
+      "critical_items_remaining": 0,
       "error": null,
-      "estimated_used": 1738,
+      "estimated_used": 1452,
       "evidence_ids": [
-        "x:1001@431b49d5427f958cc38a3f312171cba89c93c405a77c3323d4587f848f2cc49b",
-        "x:1002@45d5bfef6b1266a2e8fe6c6c0b8138d659a8bf077fc77cb56720695437b65960",
-        "x:1003@0e4d1073eca81eb1692c4b6a04c46ead4fa1c417c2c7b48de62b615ccc428ca1",
-        "x:1004@05d312e7a99c05afa9d88f5bf68948ec630f53921e915162b6649a54ee07eb2a",
-        "x:1005@1854e44193963b99ff1ce0b5321175ebf736d57728f9d826793fa02635d90539",
-        "x:1006@096dde9f0c4b476ef8462e5c6b16a463195c1c2d6339920dcf365f7dd6175e6a",
-        "x:1007@b64078723a9d5bc47da18bdf558e152f8be1a301b04a0d75a4f7ffced903e16e"
+        "x:demo-official-epoch-proof@9ca6060c0cb856ca8a69b6d90005da0a629b3073276b4d218409d832497c6685",
+        "github:technocore-chat:issue:demo-nonce@06ff655cab008ff6faad3e51fe0664640661b955f492c216c3f3cb5c37337953",
+        "github:technocore-chat:issue:demo-rewind@36fea8a71a73fc3fafab48df2c3bba7ea8d087b8d326dabdc924be600fb31db1",
+        "x:demo-index-guidance@143e42d70f4115b99256b7713dee0f23d6b80e0376bec466ad584d0bf23c51c0"
       ],
-      "over_budget": 31,
-      "payload_sha256": "a6a2f64f5951bb0603deec958c631c2eee1d6b9ebd1c80d1fdf2031b1f6b5d2d"
+      "over_budget": 0,
+      "payload_sha256": "26d75314dc3bbba37cf2cd04062cc3ceb302852510116a994d901e59c935253f"
     }
   ],
   "coverage_details": [
     {
-      "cursor": "240",
+      "cursor": "2",
       "epoch": 0,
-      "known_missing": 10,
-      "observed": 230,
+      "known_missing": 0,
+      "observed": 2,
       "pending_fetch": 0,
       "ranges": [
         {
-          "end": 180,
+          "end": 2,
+          "start": 1,
+          "state": "observed"
+        }
+      ],
+      "scope": "flop-labs/technocore-chat",
+      "source": "github",
+      "status": "complete_for_observed_window",
+      "unknown_gap": 0
+    },
+    {
+      "cursor": "150",
+      "epoch": 0,
+      "known_missing": 1,
+      "observed": 149,
+      "pending_fetch": 0,
+      "ranges": [
+        {
+          "end": 98,
           "start": 1,
           "state": "observed"
         },
         {
-          "end": 190,
-          "start": 181,
+          "end": 99,
+          "start": 99,
           "state": "confirmed_lost"
         },
         {
-          "end": 240,
-          "start": 191,
+          "end": 150,
+          "start": 100,
           "state": "observed"
         }
       ],
       "scope": "chat",
       "source": "technocore",
       "status": "partial",
+      "unknown_gap": 0
+    },
+    {
+      "cursor": "2",
+      "epoch": 0,
+      "known_missing": 0,
+      "observed": 2,
+      "pending_fetch": 0,
+      "ranges": [
+        {
+          "end": 2,
+          "start": 1,
+          "state": "observed"
+        }
+      ],
+      "scope": "official_accounts",
+      "source": "x",
+      "status": "complete_for_observed_window",
       "unknown_gap": 0
     }
   ],
@@ -604,5 +566,5 @@
     "reduction_basis_points": 5392
   },
   "schema": "technocore-dashboard-envelope/v1",
-  "snapshot_kind": "synthetic_repetition_stress_fixture"
+  "snapshot_kind": "synthetic_contribution_scenarios"
 }

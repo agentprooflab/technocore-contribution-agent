@@ -26,3 +26,16 @@ def test_evaluation_budget_curve_is_integral_and_compiler_inclusive() -> None:
         if point["error"] is None:
             assert point["estimated_used"] <= point["budget"]
             assert point["payload_sha256"] is not None
+
+
+def test_dashboard_demo_uses_varied_actionable_contribution_scenarios() -> None:
+    _report, dashboard = evaluate()
+    items = dashboard["brief"]["items"]
+    excerpts = [item["excerpt"] for item in items]
+    assert dashboard["snapshot_kind"] == "synthetic_contribution_scenarios"
+    assert {item["source"] for item in items} == {"x", "github"}
+    assert {item["priority"] for item in items} >= {70, 75, 100}
+    assert any("room-epoch recovery" in excerpt for excerpt in excerpts)
+    assert any("duplicate nonce" in excerpt for excerpt in excerpts)
+    assert any("Do not launch another directory" in excerpt for excerpt in excerpts)
+    assert all("positive-" not in excerpt for excerpt in excerpts)

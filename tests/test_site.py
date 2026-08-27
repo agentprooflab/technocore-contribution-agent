@@ -54,7 +54,7 @@ def test_dashboard_renders_dynamic_claims_and_complete_suppression(tmp_path) -> 
     assert metrics["official_recall"] in rendered
     assert f"{metrics['reduction_basis_points'] / 100:.2f}%" in rendered
     assert f"DEFERRED {brief['suppressed']['over_budget']}" in rendered
-    assert "SYNTHETIC REPETITION-STRESS SNAPSHOT" in rendered
+    assert "CURATED SYNTHETIC CONTRIBUTION SCENARIOS" in rendered
 
 
 def test_dashboard_uses_plain_language_editorial_hierarchy_and_motion_fallback(tmp_path) -> None:

@@ -1,7 +1,7 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://agentprooflab.invalid/spdx/dee92d127e19cc14c61eb54ce3dee4b241c0e35272d9049f19c4a03da01e3fb4",
+  "documentNamespace": "https://agentprooflab.invalid/spdx/3cb46ee0b6a1949eafc14ed8530d23fbc3c9d880bf00a67bdea4b3e0f6d6f125",
   "name": "technocore-contribution-agent-0.2.0",
   "packages": [
     {
